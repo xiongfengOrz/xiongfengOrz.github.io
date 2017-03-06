@@ -87,12 +87,25 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="A little thought">
-<meta property="og:url" content="http://yoursite.com/index.html">
+<meta name="description" content="这篇文章根据16年学习hazard_pointer写的笔记扩展而来的。
+
+  最近读了这篇介绍hazard_pointer的文章，回想起了进实验室做的第一个关于分布式路由的项目，其中我用了RCU替换了路由表的读写锁。这两者都是适用于读多写少的场景，一样都适合在某些情况下替换掉读写锁。故写下这篇记录，对比下RCU和hazard_pointer这两种无锁编程技术。
+读写锁  先说说读写锁，在服务器多">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用无锁编程来替换读写锁">
+<meta property="og:url" content="http://yoursite.com/2017/03/06/无锁编程之替换读写锁/index.html">
 <meta property="og:site_name" content="A little thought">
+<meta property="og:description" content="这篇文章根据16年学习hazard_pointer写的笔记扩展而来的。
+
+  最近读了这篇介绍hazard_pointer的文章，回想起了进实验室做的第一个关于分布式路由的项目，其中我用了RCU替换了路由表的读写锁。这两者都是适用于读多写少的场景，一样都适合在某些情况下替换掉读写锁。故写下这篇记录，对比下RCU和hazard_pointer这两种无锁编程技术。
+读写锁  先说说读写锁，在服务器多">
+<meta property="og:updated_time" content="2017-03-06T11:52:22.372Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="A little thought">
+<meta name="twitter:title" content="用无锁编程来替换读写锁">
+<meta name="twitter:description" content="这篇文章根据16年学习hazard_pointer写的笔记扩展而来的。
+
+  最近读了这篇介绍hazard_pointer的文章，回想起了进实验室做的第一个关于分布式路由的项目，其中我用了RCU替换了路由表的读写锁。这两者都是适用于读多写少的场景，一样都适合在某些情况下替换掉读写锁。故写下这篇记录，对比下RCU和hazard_pointer这两种无锁编程技术。
+读写锁  先说说读写锁，在服务器多">
 
 
 
@@ -120,13 +133,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/03/06/无锁编程之替换读写锁/"/>
 
 
 
 
 
-  <title> A little thought </title>
+  <title> 用无锁编程来替换读写锁 | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -151,9 +164,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left 
-   page-home 
- ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -226,9 +237,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -258,10 +269,7 @@
             
             
               
-                
-                <a class="post-title-link" href="/2017/03/06/无锁编程之替换读写锁/" itemprop="url">
-                  用无锁编程来替换读写锁
-                </a>
+                用无锁编程来替换读写锁
               
             
           </h1>
@@ -312,9 +320,7 @@
       
 
       
-        
-          
-            <blockquote>
+        <blockquote>
 <p>这篇文章根据16年学习hazard_pointer写的笔记扩展而来的。</p>
 </blockquote>
 <p>  最近读了这篇<a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">介绍hazard_pointer的文章</a>，回想起了进实验室做的第一个关于分布式路由的项目，其中我用了<a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">RCU</a>替换了路由表的读写锁。这两者都是适用于读多写少的场景，一样都适合在某些情况下替换掉读写锁。故写下这篇记录，对比下RCU和hazard_pointer这两种无锁编程技术。</p>
@@ -334,16 +340,20 @@
 <p><a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">What is RCU, Fundamentally?</a></p>
 <p><a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">Lock-Free Data Structures with Hazard Pointers</a></p>
 
-          
+      
+    </div>
+
+    <div>
+      
         
+
       
     </div>
 
     <div>
       
-    </div>
+        
 
-    <div>
       
     </div>
 
@@ -352,300 +362,38 @@
       
 
       
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/06/MiniRpc1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="xiong feng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="A little thought">
-    </span>
-
-    
-      <header class="post-header">
-
         
-        
-          <h1 class="post-title" itemprop="name headline">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
+              <a href="/2017/03/06/MiniRpc1/" rel="next" title="MiniRpc 开篇">
+                <i class="fa fa-chevron-left"></i> MiniRpc 开篇
+              </a>
             
-              
-                
-                <a class="post-title-link" href="/2017/03/06/MiniRpc1/" itemprop="url">
-                  MiniRpc 开篇
-                </a>
-              
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
             
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Veröffentlicht am</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-06T17:50:27+08:00">
-                2017-03-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-            <blockquote>
-<p>这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。</p>
-</blockquote>
-<p>  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，还有一些调试上的，所以就想着从EverNote中整理出几篇博客记录一下。</p>
-<p>  这是第一篇，先介绍下如果要写一个自己的Rpc库所先需要基本概念。</p>
-<h3 id="消息模式："><a href="#消息模式：" class="headerlink" title="消息模式："></a>消息模式：</h3><p>  一个Rpc系统中最重要的就是消息模式，消息模式定义了对传输消息的保证，常见的模式有：</p>
-<ul>
-<li>at least once ：指消息至少发送一次，可能超过一次</li>
-<li>at most once ：指消息最多发送一次，可能不发送</li>
-</ul>
-<p>  在实现中如何区分两者呢？很好理解，就是Rpc系统是否有持久化和重传功能，如果消息在指定时间内没有相应，就会触发重传，这就实现了at least once 。如果没有重传，就是at most once。</p>
-<p>  在我的实现中并不是at most once但也不是严格意义上的at least once。MiniRpc带有超时重传功能，但是没有对消息进行持久化，如果内存耗尽或者进程崩溃就会造成消息的丢失。这有点类似于ZeroMq。</p>
-<p>  另外多说一句，现实系统中由于网络并非百分百可靠，所以并不存在just once的模式。</p>
-<h3 id="调用模型："><a href="#调用模型：" class="headerlink" title="调用模型："></a>调用模型：</h3><p>  前面的模式针对的消息的传输次数，那这里的调用模型针对的是调用方，分为同步和异步模型。</p>
-<ul>
-<li>同步模型 ：指Client端阻塞在Rpc调用处，一直等到结果返回或者调用超时</li>
-<li>异步模型 ：指Client端不用等待结果返回</li>
-</ul>
-<p>  MiniRpc同时支持上面两种模型。同步模型很好实现，直接阻塞即可，为了实现异步模型，我们需要注册回调函数供返回消息时调用。</p>
-<h3 id="调用基本流程："><a href="#调用基本流程：" class="headerlink" title="调用基本流程："></a>调用基本流程：</h3><p>  我第一次接触到Rpc时觉得有点神奇，因为一台机器居然可以调用另外一台机器上的函数，其实稍微一想就会明白这就是一个加了Buff的网络库。</p>
-<p>  为了使用Rpc，需要在Client端和Server端各添加一个stub。</p>
-<p>  Client端的stub负责将方法、参数等组装成能够进行网络传输的消息体，同时找到服务地址，发送消息。</p>
-<p>  Server端的stub接收到消息后，根据提取出的信息，调用对应的函数，将结果打包发送给Client端。</p>
-<p>  所有这一切都对用户透明，所以在用户看来仅仅是调用一个函数，并不关心函数是在哪台机器上运行，只用等待结果即可，不用纠缠于细节，Rpc可以极大的减轻用户的负担。</p>
-<h3 id="网络模型"><a href="#网络模型" class="headerlink" title="网络模型"></a>网络模型</h3><p>  知道了一次Rpc调用的基本流程，我们就知道所有的Rpc都是要经过网络的，选择恰当的网络模型对于实现Rpc是至关重要的。</p>
-<p>  MiniRpc使用的是Reactor模型，基于linux提供的高效的epoll系统调用，同时加入了多线程模型，来应对耗时长的调用。</p>
-<p>  实现中网络层这一块的细节我会放在第二篇来讲解。</p>
-<h3 id="消息格式"><a href="#消息格式" class="headerlink" title="消息格式"></a>消息格式</h3><p>  确定了网络模型后，我们就可以在Client和Server直接收发消息了，那么接下来就是顺理成章的要确定收发的消息格式了。</p>
-<p>  消息一般分两种，request和reply，分别是Client到Server和Server回到Client。</p>
-<p>  Request：按照最直观的理解，我们需要在消息头添加上函数名和对应的参数，只有知道了名称server端才知道该调用那个函数。<br>  其他还需要调用的超时时间，如果在这个时间内没有消息返回的话就会放弃本次调用，将超时异常返回给Client端。如果是异步调用还需要添加requestId，才能识别不同的异步调用。</p>
-<p>  Reply：包含返回值和已经函数调用的状态，同时还要包含RequestId。</p>
-<h3 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h3><p>  序列化是可选的，一般选择序列化都是为了方便网络传输，如果不在乎消息的大小，直接使用JSON传输也是可以的。</p>
-<p>  MiniRpc选用了ProtoBuf来实现序列化，能尽量减小消息的格式，缺点是二进制协议不具备可读性。</p>
-<h3 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h3><p>  除了原始的通过ip和port提供服务以外，最好我们能将服务发现的过程自动化。</p>
-<p>  Server端将提供的服务提交给服务提供节点，Client端每次调用服务的时候从服务提供节点获取对应服务的server的ip和端口，再去连接server。</p>
-<p>  这就要求服务提供节点具有极高的容错性，避免出现单点故障，所以一般使用Zookeeper或者其他实现了类paxos协议的机器群。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </article>
 
 
-    
-      
 
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/05/about/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="xiong feng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="A little thought">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/03/05/about/" itemprop="url">
-                  我为什么又开始写博客
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Veröffentlicht am</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-05T20:02:13+08:00">
-                2017-03-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>这是新博客的第一篇，做个纪念。</p>
-<h2 id="为什么以前没有写下去"><a href="#为什么以前没有写下去" class="headerlink" title="为什么以前没有写下去"></a>为什么以前没有写下去</h2><p>之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。</p>
-<p>还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。</p>
-<p>所以，整个2016年，我在Evernote里记录了很多，但是却没有输出一篇博客。</p>
-<h2 id="为什么又开始写了"><a href="#为什么又开始写了" class="headerlink" title="为什么又开始写了"></a>为什么又开始写了</h2><p>前段时间，跟一位真大神聊了下，觉得自己还是有很多不足的地方，最大的缺陷就是不敢展示，不爱交流。</p>
-<p>写的笔记没有整理成博客输出出来，写代码也只是放在实验室的git服务器上不push到github上，这样成长会很缓慢的。</p>
-<p>我正视到这一点后，痛定思痛，过年来了学校后就开始整理以前的代码，以前的笔记，大胆的show出来。后面一段时间，我会逐渐将代码博客上传到github，虽然还是有不足，但成长总是一点点起来的。</p>
-<p>后面的文章，我会将博客的时间改成Evernote里笔记的时间，也算是对我过去一年的一年回顾吧。</p>
-<p>希望这次能坚持下去。</p>
-
-          
-        
+    <div class="post-spread">
       
     </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-  </section>
-
-  
+  </div>
 
           
           </div>
@@ -653,6 +401,10 @@
 
 
           
+  <div class="comments" id="comments">
+    
+  </div>
+
 
         </div>
         
@@ -672,8 +424,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.gif"
@@ -717,6 +478,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#读写锁"><span class="nav-number">1.</span> <span class="nav-text">读写锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RCU"><span class="nav-number">2.</span> <span class="nav-text">RCU</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hazard-pointer"><span class="nav-number">3.</span> <span class="nav-text">hazard_pointer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -822,6 +599,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
 
   
 
