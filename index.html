@@ -260,7 +260,7 @@
               
                 
                 <a class="post-title-link" href="/2017/03/06/MiniRpc1/" itemprop="url">
-                  MiniRpc 开篇   //在此处添加你的标题。
+                  MiniRpc 开篇
                 </a>
               
             
@@ -314,14 +314,14 @@
       
         
           
-            <h1 id="Rpc"><a href="#Rpc" class="headerlink" title="Rpc"></a>Rpc</h1><p>  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，还有一些调试上的，所以就想着从EverNote中整理出几篇博客记录一下。</p>
+            <p>  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，还有一些调试上的，所以就想着从EverNote中整理出几篇博客记录一下。</p>
 <p>  这是第一篇，先介绍下如果要写一个自己的Rpc库所先需要基本概念。</p>
-<h3 id="模式："><a href="#模式：" class="headerlink" title="模式："></a>模式：</h3><p>  一个Rpc系统中最重要的就是模式，模式定义了对传输消息的保证，常见的模式有：</p>
+<h3 id="消息模式："><a href="#消息模式：" class="headerlink" title="消息模式："></a>消息模式：</h3><p>  一个Rpc系统中最重要的就是消息模式，消息模式定义了对传输消息的保证，常见的模式有：</p>
 <ul>
 <li>at least once ：指消息至少发送一次，可能超过一次</li>
 <li>at most once ：指消息最多发送一次，可能不发送</li>
 </ul>
-<p>  在实现中如何区分两者呢？很好理解，就是Rpc系统是否有重传功能，如果消息在指定时间内没有相应，就会触发重传，这就实现了at least once 。如果没有重传，就是at most once。</p>
+<p>  在实现中如何区分两者呢？很好理解，就是Rpc系统是否有持久化和重传功能，如果消息在指定时间内没有相应，就会触发重传，这就实现了at least once 。如果没有重传，就是at most once。</p>
 <p>  在我的实现中并不是at most once但也不是严格意义上的at least once。MiniRpc带有超时重传功能，但是没有对消息进行持久化，如果内存耗尽或者进程崩溃就会造成消息的丢失。这有点类似于ZeroMq。</p>
 <p>  另外多说一句，现实系统中由于网络并非百分百可靠，所以并不存在just once的模式。</p>
 <h3 id="调用模型："><a href="#调用模型：" class="headerlink" title="调用模型："></a>调用模型：</h3><p>  前面的模式针对的消息的传输次数，那这里的调用模型针对的是调用方，分为同步和异步模型。</p>
@@ -410,7 +410,7 @@
               
                 
                 <a class="post-title-link" href="/2017/03/05/about/" itemprop="url">
-                  Hello World
+                  我为什么又开始写博客
                 </a>
               
             
@@ -464,15 +464,15 @@
       
         
           
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate发斯蒂芬</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+            <p>这是新博客的第一篇，做个纪念。</p>
+<h2 id="为什么以前没有写下去"><a href="#为什么以前没有写下去" class="headerlink" title="为什么以前没有写下去"></a>为什么以前没有写下去</h2><p>之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。</p>
+<p>还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。</p>
+<p>所以，整个2016年，我在Evernote里记录了很多，但是却没有输出一篇博客。</p>
+<h2 id="为什么又开始写了"><a href="#为什么又开始写了" class="headerlink" title="为什么又开始写了"></a>为什么又开始写了</h2><p>前段时间，跟一位真大神聊了下，觉得自己还是有很多不足的地方，最大的缺陷就是不敢展示，不爱交流。</p>
+<p>写的笔记没有整理成博客输出出来，写代码也只是放在实验室的git服务器上不push到github上，这样成长会很缓慢的。</p>
+<p>我正视到这一点后，痛定思痛，过年来了学校后就开始整理以前的代码，以前的笔记，大胆的show出来。后面一段时间，我会逐渐将代码博客上传到github，虽然还是有不足，但成长总是一点点起来的。</p>
+<p>后面的文章，我会将博客的时间改成Evernote里笔记的时间，也算是对我过去一年的一年回顾吧。</p>
+<p>希望这次能坚持下去。</p>
 
           
         
