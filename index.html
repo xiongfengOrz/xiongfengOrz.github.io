@@ -194,7 +194,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -204,7 +204,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -237,7 +237,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/07/从callback到coroutine/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/05/about/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -259,8 +259,8 @@
             
               
                 
-                <a class="post-title-link" href="/2017/03/07/从callback到coroutine/" itemprop="url">
-                  从callback到coroutine
+                <a class="post-title-link" href="/2017/03/05/about/" itemprop="url">
+                  我为什么又开始写博客
                 </a>
               
             
@@ -274,10 +274,10 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-07T17:41:45+08:00">
-                2017-03-07
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-05T20:02:13+08:00">
+                2017-03-05
               </time>
             
 
@@ -314,22 +314,15 @@
       
         
           
-            <blockquote>
-<p>这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 </p>
-</blockquote>
-<p>对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。</p>
-<p>不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术却来了好几次大转身，要弄懂这背后的历史演变，或许Dan Kegel写的”[The C10K problem][3]”是最好的介绍文章。</p>
-<p>我在这里就不想要介绍所有的并发处理手段，毕竟那样写起来好几天都写不完，只想要说一下其中一种方法–异步（<strong>Asynchronous</strong>）处理，以及它在python中的具体的实现演进。</p>
-<p>##异步非阻塞<br>异步从来都是和非阻塞联系在一起的，毕竟，你要是阻塞在某一个具体的系统调用上，又怎么去异步处理别的请求呢。在这里我们都不考虑多线程的情况，仅仅考虑单线程下的异步非阻塞处理。为了解决前面提到的C10K问题，在FreeBSD上有了kqueue，在Linux上有了epoll，而Windows则推出了IOCP。具体来说，IOCP同其他两个并不一样，是<strong>Proactor</strong>和<strong>Reactor</strong>的区别，这里就不去具体展开来讲了。</p>
-<p>以用的最多的Linux的epoll为例，如果用它来实现一个异步非阻塞服务器，具体工作流程是以一个事件循环（EventLoop）阻塞在某个具体的公认端口上（比如80），当新的连接到来的时候，服务器就回去处理这个新的连接，但是要保证在处理新的连接的过程中不能陷入阻塞，而且用时要尽可能的短，好让事件循环尽快的回到公认端口的阻塞上来处理之后的连接。基本原理并不复杂，但是要想实现好可得颇费一番功夫。大名鼎鼎的Nginx已经libevent都是使用这种方式来工作的。</p>
-<p>##回调函数<br>有了上面关于异步非阻塞的工作原理的介绍，那么该如何去实现呢？首先被想到的方法就是使用回调函数。<br>我们换一个角度去看看异步的使用，从传统的网络客户端的角度去看看如何用回调函数实现异步编程。</p>
-<p>从《Unix网络编程》中我们学习到，要实现连接到一个远端socket，我们先要调用connect系统调用，阻塞在上面，等其返回以后，建立起同远端socket的连接，然后时候发送请求，然后又阻塞在recv调用上，等待远端socket返回数据（其实send调用默认也是阻塞的，这里简化一下，就先当做非阻塞的吧）。<br>好了，上面就是一个完整的同远端socket的一次”Request-Reply”过程。如果我要用一步的手段来完成该怎么做呢？</p>
-<p>注意到异步的处理中一定不能阻塞，所以我上面强调了两处阻塞（不算send）一处在connect的时候，一处在recv的时候，如果要用回调函数的手段去做，那么，就不得不把程序拆成几块，每一次拆分就是根据程序阻塞的位置来的。比如说，在这里，我们要把程序拆成三段，在每一次被阻塞的时候都要设置一个回调函数，然后回到事件循环的处理中间去。当系统调用从阻塞中返回的时候，就会调用我们之前设置的回调函数，继续接下来的处理。</p>
-<p>你肯定已经发现问题的所在了，当我们阻塞的系统调用越多的时候，我们的程序就必须被拆分成越多的块，我们的代码支离破碎，不仅不方便阅读，也更加不方便调试，当在回调函数中有异常被触发的时候，在打印出来的函数调用栈的关系中，根本找不到更上层的代码。我知道你可能会说zeroMQ用起来会简单一点，但这里那不是我们讨论的重点。<br>回调函数中这样的问题被称作spaghetti code，就是说代码太过绕了，让人不知所云。</p>
-<p>用同步的方式来写程序只要一个函数就好，可是被阻塞又不能充分的发挥我们CPU的效能，异步回调的方式固然能处理更多的连接，但是代码写起来又太过复杂，那么有么有什么方法能结合这两者的优点呢？好了，coroutine呼之欲出了。</p>
-<p>##协程<br>提到python就不能不提协程，不是因为这是它首创的，而是在解释器全局锁的大背景下，多线程的能力被大大削弱，使用协程来在单线程中处理并发成了不得已而为之而又非常漂亮的手段（这里一定要提一下，并不是说单线程异步就一定要比多线程的效果好，单线程异步只是在有大量的非活跃连接的时候，会有更优的性能）。</p>
-<p>如何在代码中使用协程呢？python 3.4将asyncio引进的标准库，3.5更是专门增加了两个关键字async和await来处理协程，现在，在代码中使用协程已经非常方便了。<br>协程的概念大家都知道，背后的原理本质上就是在用户态来实现处理块的调度，减少内核态线程调度的开销。它的出现就是为了解决前面提到了spaghetti code的问题，使用协程来写代码，抛开前面提到了两个关键字，几乎就和同步阻塞的写法一模一样了。在有阻塞的地方，我们只要用async 将函数包裹起来，然后在主函数中使用await关键字来调用我们的异步函数，就可以了。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
+            <p>这是新博客的第一篇，做个纪念。</p>
+<h2 id="为什么以前没有写下去"><a href="#为什么以前没有写下去" class="headerlink" title="为什么以前没有写下去"></a>为什么以前没有写下去</h2><p>之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。</p>
+<p>还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。</p>
+<p>所以，整个2016年，我在Evernote里记录了很多，但是却没有输出一篇博客。</p>
+<h2 id="为什么又开始写了"><a href="#为什么又开始写了" class="headerlink" title="为什么又开始写了"></a>为什么又开始写了</h2><p>前段时间，跟一位真大神聊了下，觉得自己还是有很多不足的地方，最大的缺陷就是不敢展示，不爱交流。</p>
+<p>写的笔记没有整理成博客输出出来，写代码也只是放在实验室的git服务器上不push到github上，这样成长会很缓慢的。</p>
+<p>我正视到这一点后，痛定思痛，过年来了学校后就开始整理以前的代码，以前的笔记，大胆的show出来。后面一段时间，我会逐渐将代码博客上传到github，虽然还是有不足，但成长总是一点点起来的。</p>
+<p>后面的文章，我会将博客的时间改成Evernote里笔记的时间，也算是对我过去一年的一年回顾吧。</p>
+<p>希望这次能坚持下去。</p>
 
           
         
@@ -370,7 +363,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/07/MiniRpc2/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/03/MiniRpc2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -392,7 +385,7 @@
             
               
                 
-                <a class="post-title-link" href="/2017/03/07/MiniRpc2/" itemprop="url">
+                <a class="post-title-link" href="/2017/03/03/MiniRpc2/" itemprop="url">
                   MiniRpc 连接层
                 </a>
               
@@ -407,10 +400,10 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-07T17:41:13+08:00">
-                2017-03-07
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-03T10:36:21+08:00">
+                2017-03-03
               </time>
             
 
@@ -503,7 +496,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/06/ftp server设计/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/23/MiniRpc1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -525,284 +518,7 @@
             
               
                 
-                <a class="post-title-link" href="/2017/03/06/ftp server设计/" itemprop="url">
-                  准备实现一个FTP Server
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-06T22:20:33+08:00">
-                2017-03-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>这篇文章根据16年准备实现一个FTP Server写的笔记修改而来的，很惭愧，最后只做了个demo后来一直没有完成。</p>
-</blockquote>
-<p>  如果你搜实现一个简易的ftp server，会得到一大把的结果，数量应该不亚于实现一个简易的HTTP server。如果抛开那些实现，我们如果要完成一个ftp server所需要考虑的技术点有那些呢？这里我试着列出一些我认为需要考虑的技术点。</p>
-<h3 id="文件读写方式"><a href="#文件读写方式" class="headerlink" title="文件读写方式"></a>文件读写方式</h3><p>  ftp 传输文件，就需要选择一个读写文件的api，write or mmap or others? </p>
-<p>  感觉上mmap实现内存映射少了从内核缓存拷贝到用户缓存这一个过程，效率应该会更高，但是没有考虑到的是mmap只是建立了一个虚拟空间到物理文件的映射，如果访问文件就会产生缺页中断，这就导致mmap的中断/字节的比例太高，影响性能。补充：中断太多的问题是否可以用madvise解决。</p>
-<p>  而对于read/write，linux文件系统有预读的机制，而我们一般是传输整个文件，这就需要我们顺序读取，这一点比较适合read/write的场景。</p>
-<p>  另外还可以考虑异步io-AIO机制。分为usespace和kernel实现两种。usespace的实现就是简单的开多线程而已，倒是kernel aio看上去比较合适。但是查阅资料后发现，目前kernel aio还并不完善，有诸多限制比如不能带有内核buffer必须是以direct的方式读取硬盘上的文件，并且需要读写同硬盘的block大小对齐，需要自己建立一套缓存系统。</p>
-<p>  其实对于静态文件sendfile应该更加合适，可以直接将file发往socket，实现了零拷贝，但是很多时候我们都是要读文件然后做一定的处理再交给客户端，所以用处并不广泛。</p>
-<p>  上述都是一些理论上的分析，实际上需要对不同大小的文件选用不同的方式做性能测试对比。</p>
-<p>  补充：后来我在实验室的电脑上做了简单的测试，发现在顺序读写文件的情况下read的效率要好于mmap。</p>
-<h3 id="读写线程"><a href="#读写线程" class="headerlink" title="读写线程"></a>读写线程</h3><p>  是否使用多线程来读写硬盘文件？</p>
-<p>  这里就需要区分SSD和传统的机械硬盘。机械硬盘有寻道时间，但是ssd是不一样的，ssd是没有寻道时间的。</p>
-<p>  在机械盘的情况下，有时候比如需要同时并行的读写多个文件。多线程读写硬盘是否会带来寻道时间的增加，增加延时？另外如果使用多线程的话，要使用pread和pwrite。</p>
-<p>  同上，依旧需要进行对比测试。</p>
-<p>  补充：后来在电脑上做了简单的测试，发现多线程读比单线程读的速率要高，但是平均等待时延更大。简单的解释如下，应用层的io请求在内核态会加入到io请求队列里面。内核在处理io请求的时候，并不是简单的先到先处理，而是根据磁盘的特性，使用某种电梯算法，在处理完一个io请求后，会优先处理最临近的io请求。这样可以有效的减少磁盘的寻道时间，从而提升了系统整体的io处理速度。但对于每一个io请求来看，由于可能需要在队列里面等待，所以响应时间会有所提升。</p>
-<h3 id="UDP还是TCP"><a href="#UDP还是TCP" class="headerlink" title="UDP还是TCP"></a>UDP还是TCP</h3><p>  不要诧异，tcp不是唯一的选择。尽管看上去对于传文件要考虑流量控制，同时还要考虑重传，确认，超时，乱序都要有。在这些上，tcp都是现成的。而udp却全都要自己在应用层实现，会大大增加工作量。</p>
-<p>  但是tcp在设计的时候并不是以性能作为第一目标，其拥塞控制算法中的慢启动，拥塞避免等算法更多考虑的是网络的公平性。如果我们用udp重新实现，可以做到以性能为第一考虑的目标。</p>
-<p>  当然，上述性能问题可以用多条tcp链接分块传输来实现。同上，依旧只是理论分析，要靠实际来检验。</p>
-<h3 id="断点下载"><a href="#断点下载" class="headerlink" title="断点下载"></a>断点下载</h3><p>  基本上将文件分块，通过多线程多条链接下载，同时需要在客户端保存下载完成的进度。</p>
-<p>  由于客户端可能断点或者其他的原因奔溃，而下载内容缓存在内存中会丢失，可以考虑数据库事务的实现方式，通过WAL来确认接收到的文件的某一块是否已经完整的写入硬盘。</p>
-<h3 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h3><p>  安全这一块真的不怎么懂。直接贴当时我的记录吧。<br>  服务端加盐存储md5值，防止彩虹表爆破。<br>  同时还要防止重放攻击，增加一个token值?<br>  由于没有使用TLS，所以传输层不安全。加密密码的使用对称加密效率高，但是交换密码不方便，非对称加密解密效率较低。<br>  抽空看看密码学吧。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://lse.sourceforge.net/io/aio.html" target="_blank" rel="external">Linux kernel AIO</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/06/无锁编程之替换读写锁/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="xiong feng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="A little thought">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/03/06/无锁编程之替换读写锁/" itemprop="url">
-                  用无锁编程来替换读写锁
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-06T18:35:40+08:00">
-                2017-03-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>这篇文章根据16年学习hazard_pointer写的笔记扩展而来的。</p>
-</blockquote>
-<p>  最近读了这篇<a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">介绍hazard_pointer的文章</a>，回想起了进实验室做的第一个关于分布式路由的项目，其中我用了<a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">RCU</a>替换了路由表的读写锁。这两者都是适用于读多写少的场景，一样都适合在某些情况下替换掉读写锁。故写下这篇记录，对比下RCU和hazard_pointer这两种无锁编程技术。</p>
-<h3 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h3><p>  先说说读写锁，在服务器多线程应用中，并发的读写一个全局变量是非常常见的场景。一般这个时候我们都会加上互斥锁或者读写锁，防止data-race。这里要注意的是，并不能简单的说读写锁就一定优于互斥锁，不信？ 看<a href="https://blogs.oracle.com/roch/entry/beware_of_the_performance_of" target="_blank" rel="external">这里</a>。但是文章中的判断只具有指导意义，实际情况中最好做BenchMark视情况而定。</p>
-<p>  但是有的时候，读写锁在高并发的情况下存在一些局限，一方面对锁的争用会带来性能上的问题，另一方面，读者或者写者也有被饿死的危险。尤其是第二个问题，让我们自然而然的想到了用无锁编程的技巧来替换掉读写锁。</p>
-<h3 id="RCU"><a href="#RCU" class="headerlink" title="RCU"></a>RCU</h3><p>  RCU全称Read-Copy Update，是早在linux 2.6的内核中就引进的一种新的高性能的机制。</p>
-<p>  RCU的名字很容易让人联想到COW(Copy On Write)，其实现上也确实和cow有点类似。对于被RCU保护的共享数据结构，读者不需要获得任何锁就可以访问它，但写者在访问它时首先拷贝一个副本，然后对副本进行修改，最后使用一个回调（callback）机制在适当的时机把指向原来数据的指针重新指向新的被修改的数据。</p>
-<p>  这里有一个内核实现上的小trick，就是如何判断没有读者在将要被释放的数据上。内核限制了RCU的使用，在读者使用RCU保护的数据期间，不能发生阻塞，如果没有阻塞，那么就没有切换。内核判断如果所有CPU上都经历了一次切换，就没有读者引用旧的数据，就可以安全修改指针指向新的数据。</p>
-<p>  在使用了RCU后，读者几乎没有什么同步开销，没有锁，没有原子变量，在X86下甚至不用考虑memory order，不会被饿死。由于读者几乎没有开销，那对于写者，就需要承担更多的开销，它需要复制被修改的数据结构，同时要确定没有读者在引用被修改的原内容后，释放掉原来的数据，但是RCU并不拒绝多个写者的同时写入，这是读写锁所做不到的，当然多个写者之间还是要考虑适当的同步。</p>
-<p>  使用了RCU带来了相对于读写锁如此多的好处，那是不是所有出现读写锁的地方都可以使用RCU呢？当然不是的，如果RCU没有其他side effect那就真没有读写锁什么事了，可现实是RCU要求读者在持有读数据期间不能阻塞，同时，由于写者较大的开销，在写者很多的情况下，读的高性能不能弥补写的开销带来的损失。</p>
-<p>  而且，RCU允许读者继续在旧的数据上操作直到离开，那并不是所有应用都能允许这一点，但是在某些应用中是可以的，比如路由表的更新，暂时读到旧的路由是没有关系的，如果发现路由失效读者就会再次读取路由表，这时就会读到新的路由了。这也就是为什么我可以在实验室的项目中用RCU替换掉路由表的读写锁的原因。</p>
-<h3 id="hazard-pointer"><a href="#hazard-pointer" class="headerlink" title="hazard_pointer"></a>hazard_pointer</h3><p>  明白了RCU的基本操作原理，hazard_pointer也就没那么难懂了。hazard_pointer包裹了原始的pointer，读者要访问共享变量前要先保存到读线程局部变量(thread_local)，然后再访问，访问完成后从线程局部移除。而要释放一个共享对象时，则要先遍历所有读线程保存了hazard_pointer的局部变量,只要有一个读线程thread_local保存有这个共享对象的hazard_pointer，说明这个线程有可能将要访问这个对象，因此不能释放，只有所有读线程的thread_local信息中都没有保存这个共享对象的hazard_pointer情况下，才能将其释放。</p>
-<p>  其实现上也有一个小trick，读的操作中有一个double check的过程，就是在拿到全局变量加入thread_local后需要再判断一次全局变量是否还在。如果想知道为什么这么做可以去看看Reference里的原始文章，在这里我就不复述了。</p>
-<p>  hazard_pointer的问题是每次都要遍历所有读线程的thread local，这个耗时在读线程较多的时候会相当可观。为了减少耗时，可以采取同pipeline相同的思想，只有在需要写的变量操作一定的数量后才开始遍历的操作，这样可以减少写的耗时。</p>
-<p>  另外有了hazard_pointer后，我们顺便其实还解决了无锁编程中的ABA问题，这在不方便使用传统方法解决(比如加上版本号)的情况下不失为另外一种好的办法。</p>
-<p>  RCU不光只是在内核态有，在用户态也有。如果一定要对比下这两种无锁编程的技术，那就是hazard_pointer比较难用，还需要考虑很多的问题。比如究竟需要多少hazard_pointer，在很多时候，我们并不一定需要hazard_pointer，比如如果我们从不解引用指针等等一些情况。遗憾的是我也没有在实际工程中使用过hazard_pointer，以后如果有机会使用过了，我会再回来补上使用的体验。 </p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://blogs.oracle.com/roch/entry/beware_of_the_performance_of" target="_blank" rel="external">Beware of the Performance of RW Locks</a></p>
-<p><a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">What is RCU, Fundamentally?</a></p>
-<p><a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">Lock-Free Data Structures with Hazard Pointers</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/06/MiniRpc1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="xiong feng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="A little thought">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/03/06/MiniRpc1/" itemprop="url">
+                <a class="post-title-link" href="/2017/02/23/MiniRpc1/" itemprop="url">
                   MiniRpc 开篇
                 </a>
               
@@ -817,10 +533,10 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-06T17:50:27+08:00">
-                2017-03-06
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-23T10:36:21+08:00">
+                2017-02-23
               </time>
             
 
@@ -933,7 +649,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/05/about/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/10/15/无锁编程之替换读写锁/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -955,8 +671,8 @@
             
               
                 
-                <a class="post-title-link" href="/2017/03/05/about/" itemprop="url">
-                  我为什么又开始写博客
+                <a class="post-title-link" href="/2016/10/15/无锁编程之替换读写锁/" itemprop="url">
+                  用无锁编程来替换读写锁
                 </a>
               
             
@@ -970,10 +686,10 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-05T20:02:13+08:00">
-                2017-03-05
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-10-15T10:36:21+08:00">
+                2016-10-15
               </time>
             
 
@@ -1010,15 +726,26 @@
       
         
           
-            <p>这是新博客的第一篇，做个纪念。</p>
-<h2 id="为什么以前没有写下去"><a href="#为什么以前没有写下去" class="headerlink" title="为什么以前没有写下去"></a>为什么以前没有写下去</h2><p>之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。</p>
-<p>还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。</p>
-<p>所以，整个2016年，我在Evernote里记录了很多，但是却没有输出一篇博客。</p>
-<h2 id="为什么又开始写了"><a href="#为什么又开始写了" class="headerlink" title="为什么又开始写了"></a>为什么又开始写了</h2><p>前段时间，跟一位真大神聊了下，觉得自己还是有很多不足的地方，最大的缺陷就是不敢展示，不爱交流。</p>
-<p>写的笔记没有整理成博客输出出来，写代码也只是放在实验室的git服务器上不push到github上，这样成长会很缓慢的。</p>
-<p>我正视到这一点后，痛定思痛，过年来了学校后就开始整理以前的代码，以前的笔记，大胆的show出来。后面一段时间，我会逐渐将代码博客上传到github，虽然还是有不足，但成长总是一点点起来的。</p>
-<p>后面的文章，我会将博客的时间改成Evernote里笔记的时间，也算是对我过去一年的一年回顾吧。</p>
-<p>希望这次能坚持下去。</p>
+            <blockquote>
+<p>这篇文章根据16年学习hazard_pointer写的笔记扩展而来的。</p>
+</blockquote>
+<p>  最近读了这篇<a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">介绍hazard_pointer的文章</a>，回想起了进实验室做的第一个关于分布式路由的项目，其中我用了<a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">RCU</a>替换了路由表的读写锁。这两者都是适用于读多写少的场景，一样都适合在某些情况下替换掉读写锁。故写下这篇记录，对比下RCU和hazard_pointer这两种无锁编程技术。</p>
+<h3 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h3><p>  先说说读写锁，在服务器多线程应用中，并发的读写一个全局变量是非常常见的场景。一般这个时候我们都会加上互斥锁或者读写锁，防止data-race。这里要注意的是，并不能简单的说读写锁就一定优于互斥锁，不信？ 看<a href="https://blogs.oracle.com/roch/entry/beware_of_the_performance_of" target="_blank" rel="external">这里</a>。但是文章中的判断只具有指导意义，实际情况中最好做BenchMark视情况而定。</p>
+<p>  但是有的时候，读写锁在高并发的情况下存在一些局限，一方面对锁的争用会带来性能上的问题，另一方面，读者或者写者也有被饿死的危险。尤其是第二个问题，让我们自然而然的想到了用无锁编程的技巧来替换掉读写锁。</p>
+<h3 id="RCU"><a href="#RCU" class="headerlink" title="RCU"></a>RCU</h3><p>  RCU全称Read-Copy Update，是早在linux 2.6的内核中就引进的一种新的高性能的机制。</p>
+<p>  RCU的名字很容易让人联想到COW(Copy On Write)，其实现上也确实和cow有点类似。对于被RCU保护的共享数据结构，读者不需要获得任何锁就可以访问它，但写者在访问它时首先拷贝一个副本，然后对副本进行修改，最后使用一个回调（callback）机制在适当的时机把指向原来数据的指针重新指向新的被修改的数据。</p>
+<p>  这里有一个内核实现上的小trick，就是如何判断没有读者在将要被释放的数据上。内核限制了RCU的使用，在读者使用RCU保护的数据期间，不能发生阻塞，如果没有阻塞，那么就没有切换。内核判断如果所有CPU上都经历了一次切换，就没有读者引用旧的数据，就可以安全修改指针指向新的数据。</p>
+<p>  在使用了RCU后，读者几乎没有什么同步开销，没有锁，没有原子变量，在X86下甚至不用考虑memory order，不会被饿死。由于读者几乎没有开销，那对于写者，就需要承担更多的开销，它需要复制被修改的数据结构，同时要确定没有读者在引用被修改的原内容后，释放掉原来的数据，但是RCU并不拒绝多个写者的同时写入，这是读写锁所做不到的，当然多个写者之间还是要考虑适当的同步。</p>
+<p>  使用了RCU带来了相对于读写锁如此多的好处，那是不是所有出现读写锁的地方都可以使用RCU呢？当然不是的，如果RCU没有其他side effect那就真没有读写锁什么事了，可现实是RCU要求读者在持有读数据期间不能阻塞，同时，由于写者较大的开销，在写者很多的情况下，读的高性能不能弥补写的开销带来的损失。</p>
+<p>  而且，RCU允许读者继续在旧的数据上操作直到离开，那并不是所有应用都能允许这一点，但是在某些应用中是可以的，比如路由表的更新，暂时读到旧的路由是没有关系的，如果发现路由失效读者就会再次读取路由表，这时就会读到新的路由了。这也就是为什么我可以在实验室的项目中用RCU替换掉路由表的读写锁的原因。</p>
+<h3 id="hazard-pointer"><a href="#hazard-pointer" class="headerlink" title="hazard_pointer"></a>hazard_pointer</h3><p>  明白了RCU的基本操作原理，hazard_pointer也就没那么难懂了。hazard_pointer包裹了原始的pointer，读者要访问共享变量前要先保存到读线程局部变量(thread_local)，然后再访问，访问完成后从线程局部移除。而要释放一个共享对象时，则要先遍历所有读线程保存了hazard_pointer的局部变量,只要有一个读线程thread_local保存有这个共享对象的hazard_pointer，说明这个线程有可能将要访问这个对象，因此不能释放，只有所有读线程的thread_local信息中都没有保存这个共享对象的hazard_pointer情况下，才能将其释放。</p>
+<p>  其实现上也有一个小trick，读的操作中有一个double check的过程，就是在拿到全局变量加入thread_local后需要再判断一次全局变量是否还在。如果想知道为什么这么做可以去看看Reference里的原始文章，在这里我就不复述了。</p>
+<p>  hazard_pointer的问题是每次都要遍历所有读线程的thread local，这个耗时在读线程较多的时候会相当可观。为了减少耗时，可以采取同pipeline相同的思想，只有在需要写的变量操作一定的数量后才开始遍历的操作，这样可以减少写的耗时。</p>
+<p>  另外有了hazard_pointer后，我们顺便其实还解决了无锁编程中的ABA问题，这在不方便使用传统方法解决(比如加上版本号)的情况下不失为另外一种好的办法。</p>
+<p>  RCU不光只是在内核态有，在用户态也有。如果一定要对比下这两种无锁编程的技术，那就是hazard_pointer比较难用，还需要考虑很多的问题。比如究竟需要多少hazard_pointer，在很多时候，我们并不一定需要hazard_pointer，比如如果我们从不解引用指针等等一些情况。遗憾的是我也没有在实际工程中使用过hazard_pointer，以后如果有机会使用过了，我会再回来补上使用的体验。 </p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://blogs.oracle.com/roch/entry/beware_of_the_performance_of" target="_blank" rel="external">Beware of the Performance of RW Locks</a></p>
+<p><a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">What is RCU, Fundamentally?</a></p>
+<p><a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">Lock-Free Data Structures with Hazard Pointers</a></p>
 
           
         
@@ -1059,7 +786,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/08/18/分布式一致性协议/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/22/ftp server设计/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -1081,7 +808,147 @@
             
               
                 
-                <a class="post-title-link" href="/2015/08/18/分布式一致性协议/" itemprop="url">
+                <a class="post-title-link" href="/2016/07/22/ftp server设计/" itemprop="url">
+                  准备实现一个FTP Server
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-07-22T10:36:21+08:00">
+                2016-07-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>这篇文章根据16年准备实现一个FTP Server写的笔记修改而来的，很惭愧，最后只做了个demo后来一直没有完成。</p>
+</blockquote>
+<p>  如果你搜实现一个简易的ftp server，会得到一大把的结果，数量应该不亚于实现一个简易的HTTP server。如果抛开那些实现，我们如果要完成一个ftp server所需要考虑的技术点有那些呢？这里我试着列出一些我认为需要考虑的技术点。</p>
+<h3 id="文件读写方式"><a href="#文件读写方式" class="headerlink" title="文件读写方式"></a>文件读写方式</h3><p>  ftp 传输文件，就需要选择一个读写文件的api，write or mmap or others? </p>
+<p>  感觉上mmap实现内存映射少了从内核缓存拷贝到用户缓存这一个过程，效率应该会更高，但是没有考虑到的是mmap只是建立了一个虚拟空间到物理文件的映射，如果访问文件就会产生缺页中断，这就导致mmap的中断/字节的比例太高，影响性能。补充：中断太多的问题是否可以用madvise解决。</p>
+<p>  而对于read/write，linux文件系统有预读的机制，而我们一般是传输整个文件，这就需要我们顺序读取，这一点比较适合read/write的场景。</p>
+<p>  另外还可以考虑异步io-AIO机制。分为usespace和kernel实现两种。usespace的实现就是简单的开多线程而已，倒是kernel aio看上去比较合适。但是查阅资料后发现，目前kernel aio还并不完善，有诸多限制比如不能带有内核buffer必须是以direct的方式读取硬盘上的文件，并且需要读写同硬盘的block大小对齐，需要自己建立一套缓存系统。</p>
+<p>  其实对于静态文件sendfile应该更加合适，可以直接将file发往socket，实现了零拷贝，但是很多时候我们都是要读文件然后做一定的处理再交给客户端，所以用处并不广泛。</p>
+<p>  上述都是一些理论上的分析，实际上需要对不同大小的文件选用不同的方式做性能测试对比。</p>
+<p>  补充：后来我在实验室的电脑上做了简单的测试，发现在顺序读写文件的情况下read的效率要好于mmap。</p>
+<h3 id="读写线程"><a href="#读写线程" class="headerlink" title="读写线程"></a>读写线程</h3><p>  是否使用多线程来读写硬盘文件？</p>
+<p>  这里就需要区分SSD和传统的机械硬盘。机械硬盘有寻道时间，但是ssd是不一样的，ssd是没有寻道时间的。</p>
+<p>  在机械盘的情况下，有时候比如需要同时并行的读写多个文件。多线程读写硬盘是否会带来寻道时间的增加，增加延时？另外如果使用多线程的话，要使用pread和pwrite。</p>
+<p>  同上，依旧需要进行对比测试。</p>
+<p>  补充：后来在电脑上做了简单的测试，发现多线程读比单线程读的速率要高，但是平均等待时延更大。简单的解释如下，应用层的io请求在内核态会加入到io请求队列里面。内核在处理io请求的时候，并不是简单的先到先处理，而是根据磁盘的特性，使用某种电梯算法，在处理完一个io请求后，会优先处理最临近的io请求。这样可以有效的减少磁盘的寻道时间，从而提升了系统整体的io处理速度。但对于每一个io请求来看，由于可能需要在队列里面等待，所以响应时间会有所提升。</p>
+<h3 id="UDP还是TCP"><a href="#UDP还是TCP" class="headerlink" title="UDP还是TCP"></a>UDP还是TCP</h3><p>  不要诧异，tcp不是唯一的选择。尽管看上去对于传文件要考虑流量控制，同时还要考虑重传，确认，超时，乱序都要有。在这些上，tcp都是现成的。而udp却全都要自己在应用层实现，会大大增加工作量。</p>
+<p>  但是tcp在设计的时候并不是以性能作为第一目标，其拥塞控制算法中的慢启动，拥塞避免等算法更多考虑的是网络的公平性。如果我们用udp重新实现，可以做到以性能为第一考虑的目标。</p>
+<p>  当然，上述性能问题可以用多条tcp链接分块传输来实现。同上，依旧只是理论分析，要靠实际来检验。</p>
+<h3 id="断点下载"><a href="#断点下载" class="headerlink" title="断点下载"></a>断点下载</h3><p>  基本上将文件分块，通过多线程多条链接下载，同时需要在客户端保存下载完成的进度。</p>
+<p>  由于客户端可能断点或者其他的原因奔溃，而下载内容缓存在内存中会丢失，可以考虑数据库事务的实现方式，通过WAL来确认接收到的文件的某一块是否已经完整的写入硬盘。</p>
+<h3 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h3><p>  安全这一块真的不怎么懂。直接贴当时我的记录吧。<br>  服务端加盐存储md5值，防止彩虹表爆破。<br>  同时还要防止重放攻击，增加一个token值?<br>  由于没有使用TLS，所以传输层不安全。加密密码的使用对称加密效率高，但是交换密码不方便，非对称加密解密效率较低。<br>  抽空看看密码学吧。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://lse.sourceforge.net/io/aio.html" target="_blank" rel="external">Linux kernel AIO</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/06/18/分布式一致性协议/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/06/18/分布式一致性协议/" itemprop="url">
                   也来说说分布式一致性协议-Paxos
                 </a>
               
@@ -1096,10 +963,10 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2015-08-18T10:36:21+08:00">
-                2015-08-18
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-06-18T10:36:21+08:00">
+                2016-06-18
               </time>
             
 
@@ -1207,6 +1074,275 @@
 
 
     
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/05/03/从callback到coroutine/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/05/03/从callback到coroutine/" itemprop="url">
+                  从callback到coroutine
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-05-03T16:36:21+08:00">
+                2016-05-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 </p>
+</blockquote>
+<p>对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。</p>
+<p>不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术却来了好几次大转身，要弄懂这背后的历史演变，或许Dan Kegel写的”[The C10K problem][3]”是最好的介绍文章。</p>
+<p>我在这里就不想要介绍所有的并发处理手段，毕竟那样写起来好几天都写不完，只想要说一下其中一种方法–异步（<strong>Asynchronous</strong>）处理，以及它在python中的具体的实现演进。</p>
+<p>##异步非阻塞<br>异步从来都是和非阻塞联系在一起的，毕竟，你要是阻塞在某一个具体的系统调用上，又怎么去异步处理别的请求呢。在这里我们都不考虑多线程的情况，仅仅考虑单线程下的异步非阻塞处理。为了解决前面提到的C10K问题，在FreeBSD上有了kqueue，在Linux上有了epoll，而Windows则推出了IOCP。具体来说，IOCP同其他两个并不一样，是<strong>Proactor</strong>和<strong>Reactor</strong>的区别，这里就不去具体展开来讲了。</p>
+<p>以用的最多的Linux的epoll为例，如果用它来实现一个异步非阻塞服务器，具体工作流程是以一个事件循环（EventLoop）阻塞在某个具体的公认端口上（比如80），当新的连接到来的时候，服务器就回去处理这个新的连接，但是要保证在处理新的连接的过程中不能陷入阻塞，而且用时要尽可能的短，好让事件循环尽快的回到公认端口的阻塞上来处理之后的连接。基本原理并不复杂，但是要想实现好可得颇费一番功夫。大名鼎鼎的Nginx已经libevent都是使用这种方式来工作的。</p>
+<p>##回调函数<br>有了上面关于异步非阻塞的工作原理的介绍，那么该如何去实现呢？首先被想到的方法就是使用回调函数。<br>我们换一个角度去看看异步的使用，从传统的网络客户端的角度去看看如何用回调函数实现异步编程。</p>
+<p>从《Unix网络编程》中我们学习到，要实现连接到一个远端socket，我们先要调用connect系统调用，阻塞在上面，等其返回以后，建立起同远端socket的连接，然后时候发送请求，然后又阻塞在recv调用上，等待远端socket返回数据（其实send调用默认也是阻塞的，这里简化一下，就先当做非阻塞的吧）。<br>好了，上面就是一个完整的同远端socket的一次”Request-Reply”过程。如果我要用一步的手段来完成该怎么做呢？</p>
+<p>注意到异步的处理中一定不能阻塞，所以我上面强调了两处阻塞（不算send）一处在connect的时候，一处在recv的时候，如果要用回调函数的手段去做，那么，就不得不把程序拆成几块，每一次拆分就是根据程序阻塞的位置来的。比如说，在这里，我们要把程序拆成三段，在每一次被阻塞的时候都要设置一个回调函数，然后回到事件循环的处理中间去。当系统调用从阻塞中返回的时候，就会调用我们之前设置的回调函数，继续接下来的处理。</p>
+<p>你肯定已经发现问题的所在了，当我们阻塞的系统调用越多的时候，我们的程序就必须被拆分成越多的块，我们的代码支离破碎，不仅不方便阅读，也更加不方便调试，当在回调函数中有异常被触发的时候，在打印出来的函数调用栈的关系中，根本找不到更上层的代码。我知道你可能会说zeroMQ用起来会简单一点，但这里那不是我们讨论的重点。<br>回调函数中这样的问题被称作spaghetti code，就是说代码太过绕了，让人不知所云。</p>
+<p>用同步的方式来写程序只要一个函数就好，可是被阻塞又不能充分的发挥我们CPU的效能，异步回调的方式固然能处理更多的连接，但是代码写起来又太过复杂，那么有么有什么方法能结合这两者的优点呢？好了，coroutine呼之欲出了。</p>
+<p>##协程<br>提到python就不能不提协程，不是因为这是它首创的，而是在解释器全局锁的大背景下，多线程的能力被大大削弱，使用协程来在单线程中处理并发成了不得已而为之而又非常漂亮的手段（这里一定要提一下，并不是说单线程异步就一定要比多线程的效果好，单线程异步只是在有大量的非活跃连接的时候，会有更优的性能）。</p>
+<p>如何在代码中使用协程呢？python 3.4将asyncio引进的标准库，3.5更是专门增加了两个关键字async和await来处理协程，现在，在代码中使用协程已经非常方便了。<br>协程的概念大家都知道，背后的原理本质上就是在用户态来实现处理块的调度，减少内核态线程调度的开销。它的出现就是为了解决前面提到了spaghetti code的问题，使用协程来写代码，抛开前面提到了两个关键字，几乎就和同步阻塞的写法一模一样了。在有阻塞的地方，我们只要用async 将函数包裹起来，然后在主函数中使用await关键字来调用我们的异步函数，就可以了。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/04/23/线程池/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/04/23/线程池/" itemprop="url">
+                  实现一个简单的线程池
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-04-23T10:36:21+08:00">
+                2016-04-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>这篇文章根据16年写线程池时写的笔记扩展而来的。</p>
+</blockquote>
+<p>在经典的C10K问题的解决方案中，有一种是多线程的解决思路。给出的解决思路是对到达的每一个请求，都动态的生成一个线程，来做单独的服务和和处理，如果是keep-alive的TCP连接(这个用的好像也不多)，服务线程就会一直工作到连接断开才退出。</p>
+<p>使用c或者c++来编写多线程的服务器有很多比较trick的问题需要注意，比如何时能安全的释放多个线程共同操作的资源等。在这里我不想深入的探讨这些问题，那是并发编程的范畴了。</p>
+<p>抛开并发中的竞争问题，多线程的服务器还有另外一个性能的问题，对于每一个连接都要生成一个线程去服务，当连接到达和断开的很频繁的时候就会产生非常大的开销。比如，HTTP协议中是一个无状态的协议，现代浏览器现在也都默认开启了多线程请求用来同时请求页面中不同部分的资源，那么，用户仅仅每次只是访问一个页面都会产生多个TCP请求，并且，如果客户端或者服务端不支持WebSocket协议，就要不断的建立，关闭HTTP连接，这会带来极大的线程生成和释放的开销（尽管HTTP1.1里所有连接默认都是持久连接但是在服务器的实现上过期时间一般都[很短][1]）。</p>
+<p>如何减少这些开销呢？没错，就是使用[线程池(Thread Pool)][2]。</p>
+<p>线程池的基本原理其实非常的简单，一句话来解释就是，为了将要到来的请求，提前生成准备好固定数量的线程，等连接建立后，从存放的线程中挑选一个空闲的，来处理请求，当连接断开后，将处理其的线程放回存储池中不释放。</p>
+<p>使用线程池就避免了大量的动态生成和释放线程的开销。原理是这样的这样清晰易懂，刚好我又复习了下Unix环境高级编程中关于线程的部分，想要动动手简单实现一下，语言就先使用C语言，调用Pthreads库，参考了[这里][3]。</p>
+<p>后面觉得这里更加适合使用C++的类封装还有RAII等特性，就用C++重构了一下。</p>
+<h3 id="用C来实现"><a href="#用C来实现" class="headerlink" title="用C来实现"></a>用C来实现</h3><p>整体的结构很清晰甚至说是简单，主要考虑的是消费者-生产者模型，同时使用队列来进行平衡速率。所以数据结构的设计上可以简单的考虑两种类型，一种是存储的让线程运行起来的参数thread_，另外一种就是线程池threads_pool。</p>
+<p>在thread_中，仅仅用来存放两个指针，一个指向线程将要工作的function，另外一个指向函数需要的参数，只需要这两个就足够让线程运行起来了。</p>
+<p>在threads<em>pool中，需要存放的就比较多了，这里，我使用的是一个链表来存放所有的thread</em>,同时还得有size和头尾指针，使用另外一个链表来存放空闲的已经分配好的线程。这里要注意的是，线程池是一个竞争资源，所以在存取线程的时候一定要加锁，同时，线程池可能会被取空，那样的话，接下来的所有请求都必须被阻塞，直到有线程运行完毕，被重新放回线程池中。这就需要一个手段来通知所有被阻塞的请求，在Phtreads库中，可以用条件变量pthread_cond_t来达到着一点。</p>
+<p>如何初始化和释放线程池呢？初始化就是一项项的分配资源而已。要注意的是，在释放线程池分配的资源之前，一定要使用pthread_cond_broadcast将所有的空闲线程唤醒，然后用pthread_join等待所有的线程执行完，才可以释放资源。</p>
+<p>如何让线程去执行任务呢？在这里，可以把每一个分配好的空闲线程当做一个主体，它们可以竞争线程池中的thread_资源。通过互斥锁，可以保证一次只有一个线程获取一个任务，如果现在没有要执行的任务，就使用条件变量等待（pthread_cond_wait）。这个函数会释放之前获取的锁，这样如果有新的请求就可以获取线程池的锁，添加需要执行的任务，然后使用pthread_cond_signal 唤醒在阻塞中等待的空闲线程，重新去争夺线程池的锁，第一个获取到的线程执行任务，剩下的继续阻塞等待。</p>
+<h3 id="用C-来重构一下"><a href="#用C-来重构一下" class="headerlink" title="用C++来重构一下"></a>用C++来重构一下</h3><p>基本的原理同用C语言来实现是一样的，可是C++提供了更加丰富的语言特性，比如RAII。在用C语言实现的版本中，我们要记得在获取锁之后释放锁，不然就会造成一直占用锁，其他线程没有办法执行。</p>
+<p>但是，在C++中，我们可以用类包装锁资源，在类对象初始化的时候获取锁，在类对象析构的释放锁，将程序员的任务交给语言去完成，极大的减轻了程序员的负担和出错误的可能性。而且，使用类可以有更好的封装性。</p>
+<p>基本的实现就不多说了，提一下使用的类。可以将之前使用的互斥锁和条件变量包装成类。同时将前面的任务和线程池也该用类来实现。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://zh.wikipedia.org/wiki/HTTP%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5" target="_blank" rel="external">HTTP 1.1 keepalive</a><br><a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B%E6%B1%A0" target="_blank" rel="external">线程池 Wiki</a><br><a href="http://tutorials.jenkov.com/java-concurrency/thread-pools.html" target="_blank" rel="external">Thread Pools</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
   </section>
 
   
@@ -1252,8 +1388,8 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">posts</span>
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">Artikel</span>
               </a>
             </div>
           
@@ -1307,7 +1443,7 @@
 
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

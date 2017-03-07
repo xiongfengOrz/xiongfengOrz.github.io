@@ -87,25 +87,25 @@
 
 
 
-<meta name="description" content="这是新博客的第一篇，做个纪念。
-为什么以前没有写下去之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。
-还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。
-所以，整个2016年，我在Ev">
+<meta name="description" content="这篇文章根据16年写线程池时写的笔记扩展而来的。
+
+在经典的C10K问题的解决方案中，有一种是多线程的解决思路。给出的解决思路是对到达的每一个请求，都动态的生成一个线程，来做单独的服务和和处理，如果是keep-alive的TCP连接(这个用的好像也不多)，服务线程就会一直工作到连接断开才退出。
+使用c或者c++来编写多线程的服务器有很多比较trick的问题需要注意，比如何时能安全的释放多个线程共">
 <meta property="og:type" content="article">
-<meta property="og:title" content="我为什么又开始写博客">
-<meta property="og:url" content="http://yoursite.com/2017/03/05/about/index.html">
+<meta property="og:title" content="实现一个简单的线程池">
+<meta property="og:url" content="http://yoursite.com/2016/04/23/线程池/index.html">
 <meta property="og:site_name" content="A little thought">
-<meta property="og:description" content="这是新博客的第一篇，做个纪念。
-为什么以前没有写下去之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。
-还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。
-所以，整个2016年，我在Ev">
-<meta property="og:updated_time" content="2017-03-06T10:17:07.291Z">
+<meta property="og:description" content="这篇文章根据16年写线程池时写的笔记扩展而来的。
+
+在经典的C10K问题的解决方案中，有一种是多线程的解决思路。给出的解决思路是对到达的每一个请求，都动态的生成一个线程，来做单独的服务和和处理，如果是keep-alive的TCP连接(这个用的好像也不多)，服务线程就会一直工作到连接断开才退出。
+使用c或者c++来编写多线程的服务器有很多比较trick的问题需要注意，比如何时能安全的释放多个线程共">
+<meta property="og:updated_time" content="2017-03-07T13:21:07.578Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="我为什么又开始写博客">
-<meta name="twitter:description" content="这是新博客的第一篇，做个纪念。
-为什么以前没有写下去之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。
-还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。
-所以，整个2016年，我在Ev">
+<meta name="twitter:title" content="实现一个简单的线程池">
+<meta name="twitter:description" content="这篇文章根据16年写线程池时写的笔记扩展而来的。
+
+在经典的C10K问题的解决方案中，有一种是多线程的解决思路。给出的解决思路是对到达的每一个请求，都动态的生成一个线程，来做单独的服务和和处理，如果是keep-alive的TCP连接(这个用的好像也不多)，服务线程就会一直工作到连接断开才退出。
+使用c或者c++来编写多线程的服务器有很多比较trick的问题需要注意，比如何时能安全的释放多个线程共">
 
 
 
@@ -133,13 +133,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/03/05/about/"/>
+  <link rel="canonical" href="http://yoursite.com/2016/04/23/线程池/"/>
 
 
 
 
 
-  <title> 我为什么又开始写博客 | A little thought </title>
+  <title> 实现一个简单的线程池 | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -248,7 +248,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/05/about/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/04/23/线程池/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -269,7 +269,7 @@
             
             
               
-                我为什么又开始写博客
+                实现一个简单的线程池
               
             
           </h1>
@@ -284,8 +284,8 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-05T20:02:13+08:00">
-                2017-03-05
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-04-23T10:36:21+08:00">
+                2016-04-23
               </time>
             
 
@@ -320,15 +320,25 @@
       
 
       
-        <p>这是新博客的第一篇，做个纪念。</p>
-<h2 id="为什么以前没有写下去"><a href="#为什么以前没有写下去" class="headerlink" title="为什么以前没有写下去"></a>为什么以前没有写下去</h2><p>之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。</p>
-<p>还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。</p>
-<p>所以，整个2016年，我在Evernote里记录了很多，但是却没有输出一篇博客。</p>
-<h2 id="为什么又开始写了"><a href="#为什么又开始写了" class="headerlink" title="为什么又开始写了"></a>为什么又开始写了</h2><p>前段时间，跟一位真大神聊了下，觉得自己还是有很多不足的地方，最大的缺陷就是不敢展示，不爱交流。</p>
-<p>写的笔记没有整理成博客输出出来，写代码也只是放在实验室的git服务器上不push到github上，这样成长会很缓慢的。</p>
-<p>我正视到这一点后，痛定思痛，过年来了学校后就开始整理以前的代码，以前的笔记，大胆的show出来。后面一段时间，我会逐渐将代码博客上传到github，虽然还是有不足，但成长总是一点点起来的。</p>
-<p>后面的文章，我会将博客的时间改成Evernote里笔记的时间，也算是对我过去一年的一年回顾吧。</p>
-<p>希望这次能坚持下去。</p>
+        <blockquote>
+<p>这篇文章根据16年写线程池时写的笔记扩展而来的。</p>
+</blockquote>
+<p>在经典的C10K问题的解决方案中，有一种是多线程的解决思路。给出的解决思路是对到达的每一个请求，都动态的生成一个线程，来做单独的服务和和处理，如果是keep-alive的TCP连接(这个用的好像也不多)，服务线程就会一直工作到连接断开才退出。</p>
+<p>使用c或者c++来编写多线程的服务器有很多比较trick的问题需要注意，比如何时能安全的释放多个线程共同操作的资源等。在这里我不想深入的探讨这些问题，那是并发编程的范畴了。</p>
+<p>抛开并发中的竞争问题，多线程的服务器还有另外一个性能的问题，对于每一个连接都要生成一个线程去服务，当连接到达和断开的很频繁的时候就会产生非常大的开销。比如，HTTP协议中是一个无状态的协议，现代浏览器现在也都默认开启了多线程请求用来同时请求页面中不同部分的资源，那么，用户仅仅每次只是访问一个页面都会产生多个TCP请求，并且，如果客户端或者服务端不支持WebSocket协议，就要不断的建立，关闭HTTP连接，这会带来极大的线程生成和释放的开销（尽管HTTP1.1里所有连接默认都是持久连接但是在服务器的实现上过期时间一般都[很短][1]）。</p>
+<p>如何减少这些开销呢？没错，就是使用[线程池(Thread Pool)][2]。</p>
+<p>线程池的基本原理其实非常的简单，一句话来解释就是，为了将要到来的请求，提前生成准备好固定数量的线程，等连接建立后，从存放的线程中挑选一个空闲的，来处理请求，当连接断开后，将处理其的线程放回存储池中不释放。</p>
+<p>使用线程池就避免了大量的动态生成和释放线程的开销。原理是这样的这样清晰易懂，刚好我又复习了下Unix环境高级编程中关于线程的部分，想要动动手简单实现一下，语言就先使用C语言，调用Pthreads库，参考了[这里][3]。</p>
+<p>后面觉得这里更加适合使用C++的类封装还有RAII等特性，就用C++重构了一下。</p>
+<h3 id="用C来实现"><a href="#用C来实现" class="headerlink" title="用C来实现"></a>用C来实现</h3><p>整体的结构很清晰甚至说是简单，主要考虑的是消费者-生产者模型，同时使用队列来进行平衡速率。所以数据结构的设计上可以简单的考虑两种类型，一种是存储的让线程运行起来的参数thread_，另外一种就是线程池threads_pool。</p>
+<p>在thread_中，仅仅用来存放两个指针，一个指向线程将要工作的function，另外一个指向函数需要的参数，只需要这两个就足够让线程运行起来了。</p>
+<p>在threads<em>pool中，需要存放的就比较多了，这里，我使用的是一个链表来存放所有的thread</em>,同时还得有size和头尾指针，使用另外一个链表来存放空闲的已经分配好的线程。这里要注意的是，线程池是一个竞争资源，所以在存取线程的时候一定要加锁，同时，线程池可能会被取空，那样的话，接下来的所有请求都必须被阻塞，直到有线程运行完毕，被重新放回线程池中。这就需要一个手段来通知所有被阻塞的请求，在Phtreads库中，可以用条件变量pthread_cond_t来达到着一点。</p>
+<p>如何初始化和释放线程池呢？初始化就是一项项的分配资源而已。要注意的是，在释放线程池分配的资源之前，一定要使用pthread_cond_broadcast将所有的空闲线程唤醒，然后用pthread_join等待所有的线程执行完，才可以释放资源。</p>
+<p>如何让线程去执行任务呢？在这里，可以把每一个分配好的空闲线程当做一个主体，它们可以竞争线程池中的thread_资源。通过互斥锁，可以保证一次只有一个线程获取一个任务，如果现在没有要执行的任务，就使用条件变量等待（pthread_cond_wait）。这个函数会释放之前获取的锁，这样如果有新的请求就可以获取线程池的锁，添加需要执行的任务，然后使用pthread_cond_signal 唤醒在阻塞中等待的空闲线程，重新去争夺线程池的锁，第一个获取到的线程执行任务，剩下的继续阻塞等待。</p>
+<h3 id="用C-来重构一下"><a href="#用C-来重构一下" class="headerlink" title="用C++来重构一下"></a>用C++来重构一下</h3><p>基本的原理同用C语言来实现是一样的，可是C++提供了更加丰富的语言特性，比如RAII。在用C语言实现的版本中，我们要记得在获取锁之后释放锁，不然就会造成一直占用锁，其他线程没有办法执行。</p>
+<p>但是，在C++中，我们可以用类包装锁资源，在类对象初始化的时候获取锁，在类对象析构的释放锁，将程序员的任务交给语言去完成，极大的减轻了程序员的负担和出错误的可能性。而且，使用类可以有更好的封装性。</p>
+<p>基本的实现就不多说了，提一下使用的类。可以将之前使用的互斥锁和条件变量包装成类。同时将前面的任务和线程池也该用类来实现。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://zh.wikipedia.org/wiki/HTTP%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5" target="_blank" rel="external">HTTP 1.1 keepalive</a><br><a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B%E6%B1%A0" target="_blank" rel="external">线程池 Wiki</a><br><a href="http://tutorials.jenkov.com/java-concurrency/thread-pools.html" target="_blank" rel="external">Thread Pools</a></p>
 
       
     </div>
@@ -359,15 +369,15 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/03/03/MiniRpc2/" rel="next" title="MiniRpc 连接层">
-                <i class="fa fa-chevron-left"></i> MiniRpc 连接层
-              </a>
-            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/05/03/从callback到coroutine/" rel="prev" title="从callback到coroutine">
+                从callback到coroutine <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -478,7 +488,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么以前没有写下去"><span class="nav-number">1.</span> <span class="nav-text">为什么以前没有写下去</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么又开始写了"><span class="nav-number">2.</span> <span class="nav-text">为什么又开始写了</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#用C来实现"><span class="nav-number">1.</span> <span class="nav-text">用C来实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#用C-来重构一下"><span class="nav-number">2.</span> <span class="nav-text">用C++来重构一下</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number"></span> <span class="nav-text">Reference</span></a></div>
             
 
           </div>
