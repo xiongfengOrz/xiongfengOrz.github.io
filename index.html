@@ -237,7 +237,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/03/MiniRpc2/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/02/MiniRpc4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -259,7 +259,254 @@
             
               
                 
-                <a class="post-title-link" href="/2017/03/03/MiniRpc2/" itemprop="url">
+                <a class="post-title-link" href="/2017/03/02/MiniRpc4/" itemprop="url">
+                  MiniRpc 小结
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-02T10:36:21+08:00">
+                2017-03-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>到这里，Minirpc一开始设计的基本功能都差不多完成了，但是还是有很多可以改善的地方。</p>
+<p>回顾写的整个过程，从一开始思路不清晰，到后面一点点的完善，还是学到了不少的东西的。 </p>
+<p>后面还会抽时间继续完善，现在想到的几个需要完善的地方，比如添加长连接的支持，再比如现在的测试代码不全，没有覆盖所有的可能(这是遗留下来的问题，一开始就没有怎么写测试)。<br>到最后面，如果可以的话，想添加上服务注册发现节点，这需要实现分布式一致性协议，这个完成难度比较大，但是可以试一试。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/25/MiniRpc2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/02/25/MiniRpc2/" itemprop="url">
+                  MiniRpc 实现Rpc
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-25T10:36:21+08:00">
+                2017-02-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>完成了上一篇说的网络层，我终于可以实现client端和server端的互联了。那么现在是时候动手实现自己的Rpc框架了。</p>
+<h3 id="ProtoBuf"><a href="#ProtoBuf" class="headerlink" title="ProtoBuf"></a>ProtoBuf</h3><p>google开源的序列化框架，在开始实现Minirpc之前就已经准备使用它了。不光是实现高效使用方便的序列化/反序列化协议，它还提供了实现rpc的接口，看来google一开始就是打算在它的上面实现rpc框架的，当然就是现在的gRpc。</p>
+<p>ProtoBuf的使用我就不多说，官网有<a href="https://developers.google.com/protocol-buffers/" target="_blank" rel="external">参考文档</a>。既然协议如此高效，我还稍微看了下它的编码方式，最主要的是varint编码和ZigZag编码，看来protobuf为了节省传输数据的大小无所不用其极啊。</p>
+<h3 id="RpcConnection"><a href="#RpcConnection" class="headerlink" title="RpcConnection"></a>RpcConnection</h3><p>这应该是实现中最重要的类，管理着server端的rpc连接。目前有缺陷的地方时暂时还没有实现长连接，这里写下准备实现长连接的设计。</p>
+<p>为了实现长连接，在client端需要根据不同server的ip地址建立几条少数的链接，在server端，需要使用心跳包来维持建立的长连接，即使断开无效链接。另外，如果链接数过多，可以使用时间轮的方法来踢掉长久没有响应的空闲链接。</p>
+<p>RpcConnection在代码中是使用智能指针管理的，这里就有所有权的关系，就是确定谁拥有RpcConnection。在实现上我犯过一个小错误，就是在将普通指针换成智能指针的过程中，混用了普通指针和智能指针，导致测试运行程序的时候core dump了，显示double free。这里需要注意，资源要全部交给智能指针管理，不能自己再用裸指针了。</p>
+<h3 id="连接池"><a href="#连接池" class="headerlink" title="连接池"></a>连接池</h3><p>由于现在实现中都是短链接，频繁的断开建立链接需要消耗很多的资源和不少的时间，在server端，我使用了连接池。如果新的连接到来，就从连接池中取出一个空闲连接，连接关闭后将其放回连接池。</p>
+<h3 id="负载均衡"><a href="#负载均衡" class="headerlink" title="负载均衡"></a>负载均衡</h3><p>一开始没有设计多线程，仅仅在server端只有一个工作线程。最后面在服务器上运行测试的时候，发现性能比较差，才决定在服务端加上多线程的。</p>
+<p>最后面的架构是是一个IO线程负责accept新的连接，将新到来的连接按照简单的round-robin算法用线程安全的接口放入四个工作线程，此后，连接就由工作线程管理了。这样改变了之后，性能有所提高(但是还是不满意，后面还要继续优化)。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>###<br><a href="https://developers.google.com/protocol-buffers/" target="_blank" rel="external">ProtoBuf文档</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/20/MiniRpc3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/02/20/MiniRpc3/" itemprop="url">
                   MiniRpc 连接层
                 </a>
               
@@ -276,8 +523,8 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-03T10:36:21+08:00">
-                2017-03-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-20T10:36:21+08:00">
+                2017-02-20
               </time>
             
 
@@ -370,7 +617,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/23/MiniRpc1/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/13/MiniRpc1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -392,7 +639,7 @@
             
               
                 
-                <a class="post-title-link" href="/2017/02/23/MiniRpc1/" itemprop="url">
+                <a class="post-title-link" href="/2017/01/13/MiniRpc1/" itemprop="url">
                   MiniRpc 开篇
                 </a>
               
@@ -409,8 +656,8 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-23T10:36:21+08:00">
-                2017-02-23
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-13T10:36:21+08:00">
+                2017-01-13
               </time>
             
 
@@ -1385,7 +1632,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">10</span>
                 <span class="site-state-item-name">Artikel</span>
               </a>
             </div>

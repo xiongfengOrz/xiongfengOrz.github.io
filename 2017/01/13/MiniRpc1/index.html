@@ -87,25 +87,22 @@
 
 
 
-<meta name="description" content="这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 
+<meta name="description" content="这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。
 
-对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。
-不过，不同于C1000K相对于C10K只是多了两个0，">
+  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，">
 <meta property="og:type" content="article">
-<meta property="og:title" content="从callback到coroutine">
-<meta property="og:url" content="http://yoursite.com/2016/09/03/从callback到coroutine/index.html">
+<meta property="og:title" content="MiniRpc 开篇">
+<meta property="og:url" content="http://yoursite.com/2017/01/13/MiniRpc1/index.html">
 <meta property="og:site_name" content="A little thought">
-<meta property="og:description" content="这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 
+<meta property="og:description" content="这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。
 
-对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。
-不过，不同于C1000K相对于C10K只是多了两个0，">
-<meta property="og:updated_time" content="2017-03-07T13:31:45.284Z">
+  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，">
+<meta property="og:updated_time" content="2017-03-07T13:47:24.416Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="从callback到coroutine">
-<meta name="twitter:description" content="这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 
+<meta name="twitter:title" content="MiniRpc 开篇">
+<meta name="twitter:description" content="这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。
 
-对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。
-不过，不同于C1000K相对于C10K只是多了两个0，">
+  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，">
 
 
 
@@ -133,13 +130,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/09/03/从callback到coroutine/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/01/13/MiniRpc1/"/>
 
 
 
 
 
-  <title> 从callback到coroutine | A little thought </title>
+  <title> MiniRpc 开篇 | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -248,7 +245,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/03/从callback到coroutine/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/13/MiniRpc1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -269,7 +266,7 @@
             
             
               
-                从callback到coroutine
+                MiniRpc 开篇
               
             
           </h1>
@@ -284,8 +281,8 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-09-03T16:36:21+08:00">
-                2016-09-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-13T10:36:21+08:00">
+                2017-01-13
               </time>
             
 
@@ -321,21 +318,41 @@
 
       
         <blockquote>
-<p>这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 </p>
+<p>这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。</p>
 </blockquote>
-<p>对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。</p>
-<p>不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术却来了好几次大转身，要弄懂这背后的历史演变，或许Dan Kegel写的”[The C10K problem][3]”是最好的介绍文章。</p>
-<p>我在这里就不想要介绍所有的并发处理手段，毕竟那样写起来好几天都写不完，只想要说一下其中一种方法–异步（<strong>Asynchronous</strong>）处理，以及它在python中的具体的实现演进。</p>
-<h2 id="异步非阻塞"><a href="#异步非阻塞" class="headerlink" title="异步非阻塞"></a>异步非阻塞</h2><p>异步从来都是和非阻塞联系在一起的，毕竟，你要是阻塞在某一个具体的系统调用上，又怎么去异步处理别的请求呢。在这里我们都不考虑多线程的情况，仅仅考虑单线程下的异步非阻塞处理。为了解决前面提到的C10K问题，在FreeBSD上有了kqueue，在Linux上有了epoll，而Windows则推出了IOCP。具体来说，IOCP同其他两个并不一样，是<strong>Proactor</strong>和<strong>Reactor</strong>的区别，这里就不去具体展开来讲了。</p>
-<p>以用的最多的Linux的epoll为例，如果用它来实现一个异步非阻塞服务器，具体工作流程是以一个事件循环（EventLoop）阻塞在某个具体的公认端口上（比如80），当新的连接到来的时候，服务器就回去处理这个新的连接，但是要保证在处理新的连接的过程中不能陷入阻塞，而且用时要尽可能的短，好让事件循环尽快的回到公认端口的阻塞上来处理之后的连接。基本原理并不复杂，但是要想实现好可得颇费一番功夫。大名鼎鼎的Nginx已经libevent都是使用这种方式来工作的。</p>
-<h2 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h2><p>有了上面关于异步非阻塞的工作原理的介绍，那么该如何去实现呢？首先被想到的方法就是使用回调函数。<br>我们换一个角度去看看异步的使用，从传统的网络客户端的角度去看看如何用回调函数实现异步编程。</p>
-<p>从《Unix网络编程》中我们学习到，要实现连接到一个远端socket，我们先要调用connect系统调用，阻塞在上面，等其返回以后，建立起同远端socket的连接，然后时候发送请求，然后又阻塞在recv调用上，等待远端socket返回数据（其实send调用默认也是阻塞的，这里简化一下，就先当做非阻塞的吧）。<br>好了，上面就是一个完整的同远端socket的一次”Request-Reply”过程。如果我要用一步的手段来完成该怎么做呢？</p>
-<p>注意到异步的处理中一定不能阻塞，所以我上面强调了两处阻塞（不算send）一处在connect的时候，一处在recv的时候，如果要用回调函数的手段去做，那么，就不得不把程序拆成几块，每一次拆分就是根据程序阻塞的位置来的。比如说，在这里，我们要把程序拆成三段，在每一次被阻塞的时候都要设置一个回调函数，然后回到事件循环的处理中间去。当系统调用从阻塞中返回的时候，就会调用我们之前设置的回调函数，继续接下来的处理。</p>
-<p>你肯定已经发现问题的所在了，当我们阻塞的系统调用越多的时候，我们的程序就必须被拆分成越多的块，我们的代码支离破碎，不仅不方便阅读，也更加不方便调试，当在回调函数中有异常被触发的时候，在打印出来的函数调用栈的关系中，根本找不到更上层的代码。我知道你可能会说zeroMQ用起来会简单一点，但这里那不是我们讨论的重点。<br>回调函数中这样的问题被称作spaghetti code，就是说代码太过绕了，让人不知所云。</p>
-<p>用同步的方式来写程序只要一个函数就好，可是被阻塞又不能充分的发挥我们CPU的效能，异步回调的方式固然能处理更多的连接，但是代码写起来又太过复杂，那么有么有什么方法能结合这两者的优点呢？好了，coroutine呼之欲出了。</p>
-<h2 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h2><p>提到python就不能不提协程，不是因为这是它首创的，而是在解释器全局锁的大背景下，多线程的能力被大大削弱，使用协程来在单线程中处理并发成了不得已而为之而又非常漂亮的手段（这里一定要提一下，并不是说单线程异步就一定要比多线程的效果好，单线程异步只是在有大量的非活跃连接的时候，会有更优的性能）。</p>
-<p>如何在代码中使用协程呢？python 3.4将asyncio引进的标准库，3.5更是专门增加了两个关键字async和await来处理协程，现在，在代码中使用协程已经非常方便了。<br>协程的概念大家都知道，背后的原理本质上就是在用户态来实现处理块的调度，减少内核态线程调度的开销。它的出现就是为了解决前面提到了spaghetti code的问题，使用协程来写代码，抛开前面提到了两个关键字，几乎就和同步阻塞的写法一模一样了。在有阻塞的地方，我们只要用async 将函数包裹起来，然后在主函数中使用await关键字来调用我们的异步函数，就可以了。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
+<p>  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，还有一些调试上的，所以就想着从EverNote中整理出几篇博客记录一下。</p>
+<p>  这是第一篇，先介绍下如果要写一个自己的Rpc库所先需要基本概念。</p>
+<h3 id="消息模式："><a href="#消息模式：" class="headerlink" title="消息模式："></a>消息模式：</h3><p>  一个Rpc系统中最重要的就是消息模式，消息模式定义了对传输消息的保证，常见的模式有：</p>
+<ul>
+<li>at least once ：指消息至少发送一次，可能超过一次</li>
+<li>at most once ：指消息最多发送一次，可能不发送</li>
+</ul>
+<p>  在实现中如何区分两者呢？很好理解，就是Rpc系统是否有持久化和重传功能，如果消息在指定时间内没有相应，就会触发重传，这就实现了at least once 。如果没有重传，就是at most once。</p>
+<p>  在我的实现中并不是at most once但也不是严格意义上的at least once。MiniRpc带有超时重传功能，但是没有对消息进行持久化，如果内存耗尽或者进程崩溃就会造成消息的丢失。这有点类似于ZeroMq。</p>
+<p>  另外多说一句，现实系统中由于网络并非百分百可靠，所以并不存在just once的模式。</p>
+<h3 id="调用模型："><a href="#调用模型：" class="headerlink" title="调用模型："></a>调用模型：</h3><p>  前面的模式针对的消息的传输次数，那这里的调用模型针对的是调用方，分为同步和异步模型。</p>
+<ul>
+<li>同步模型 ：指Client端阻塞在Rpc调用处，一直等到结果返回或者调用超时</li>
+<li>异步模型 ：指Client端不用等待结果返回</li>
+</ul>
+<p>  MiniRpc同时支持上面两种模型。同步模型很好实现，直接阻塞即可，为了实现异步模型，我们需要注册回调函数供返回消息时调用。</p>
+<h3 id="调用基本流程："><a href="#调用基本流程：" class="headerlink" title="调用基本流程："></a>调用基本流程：</h3><p>  我第一次接触到Rpc时觉得有点神奇，因为一台机器居然可以调用另外一台机器上的函数，其实稍微一想就会明白这就是一个加了Buff的网络库。</p>
+<p>  为了使用Rpc，需要在Client端和Server端各添加一个stub。</p>
+<p>  Client端的stub负责将方法、参数等组装成能够进行网络传输的消息体，同时找到服务地址，发送消息。</p>
+<p>  Server端的stub接收到消息后，根据提取出的信息，调用对应的函数，将结果打包发送给Client端。</p>
+<p>  所有这一切都对用户透明，所以在用户看来仅仅是调用一个函数，并不关心函数是在哪台机器上运行，只用等待结果即可，不用纠缠于细节，Rpc可以极大的减轻用户的负担。</p>
+<h3 id="网络模型"><a href="#网络模型" class="headerlink" title="网络模型"></a>网络模型</h3><p>  知道了一次Rpc调用的基本流程，我们就知道所有的Rpc都是要经过网络的，选择恰当的网络模型对于实现Rpc是至关重要的。</p>
+<p>  MiniRpc使用的是Reactor模型，基于linux提供的高效的epoll系统调用，同时加入了多线程模型，来应对耗时长的调用。</p>
+<p>  实现中网络层这一块的细节我会放在第二篇来讲解。</p>
+<h3 id="消息格式"><a href="#消息格式" class="headerlink" title="消息格式"></a>消息格式</h3><p>  确定了网络模型后，我们就可以在Client和Server直接收发消息了，那么接下来就是顺理成章的要确定收发的消息格式了。</p>
+<p>  消息一般分两种，request和reply，分别是Client到Server和Server回到Client。</p>
+<p>  Request：按照最直观的理解，我们需要在消息头添加上函数名和对应的参数，只有知道了名称server端才知道该调用那个函数。<br>  其他还需要调用的超时时间，如果在这个时间内没有消息返回的话就会放弃本次调用，将超时异常返回给Client端。如果是异步调用还需要添加requestId，才能识别不同的异步调用。</p>
+<p>  Reply：包含返回值和已经函数调用的状态，同时还要包含RequestId。</p>
+<h3 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h3><p>  序列化是可选的，一般选择序列化都是为了方便网络传输，如果不在乎消息的大小，直接使用JSON传输也是可以的。</p>
+<p>  MiniRpc选用了ProtoBuf来实现序列化，能尽量减小消息的格式，缺点是二进制协议不具备可读性。</p>
+<h3 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h3><p>  除了原始的通过ip和port提供服务以外，最好我们能将服务发现的过程自动化。</p>
+<p>  Server端将提供的服务提交给服务提供节点，Client端每次调用服务的时候从服务提供节点获取对应服务的server的ip和端口，再去连接server。</p>
+<p>  这就要求服务提供节点具有极高的容错性，避免出现单点故障，所以一般使用Zookeeper或者其他实现了类paxos协议的机器群。</p>
 
       
     </div>
@@ -366,8 +383,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/07/22/ftp server设计/" rel="next" title="准备实现一个FTP Server">
-                <i class="fa fa-chevron-left"></i> 准备实现一个FTP Server
+              <a href="/2016/11/05/无锁编程之替换读写锁/" rel="next" title="用无锁编程来替换读写锁">
+                <i class="fa fa-chevron-left"></i> 用无锁编程来替换读写锁
               </a>
             
           </div>
@@ -376,8 +393,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/09/18/分布式一致性协议/" rel="prev" title="也来说说分布式一致性协议-Paxos">
-                也来说说分布式一致性协议-Paxos <i class="fa fa-chevron-right"></i>
+              <a href="/2017/02/20/MiniRpc3/" rel="prev" title="MiniRpc 连接层">
+                MiniRpc 连接层 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -489,7 +506,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#异步非阻塞"><span class="nav-number">1.</span> <span class="nav-text">异步非阻塞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回调函数"><span class="nav-number">2.</span> <span class="nav-text">回调函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#协程"><span class="nav-number">3.</span> <span class="nav-text">协程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">3.1.</span> <span class="nav-text">Reference</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#消息模式："><span class="nav-number">1.</span> <span class="nav-text">消息模式：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用模型："><span class="nav-number">2.</span> <span class="nav-text">调用模型：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用基本流程："><span class="nav-number">3.</span> <span class="nav-text">调用基本流程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络模型"><span class="nav-number">4.</span> <span class="nav-text">网络模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息格式"><span class="nav-number">5.</span> <span class="nav-text">消息格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#序列化"><span class="nav-number">6.</span> <span class="nav-text">序列化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务发现"><span class="nav-number">7.</span> <span class="nav-text">服务发现</span></a></li></ol></div>
             
 
           </div>
