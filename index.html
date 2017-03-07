@@ -194,7 +194,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -204,7 +204,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -227,163 +227,6 @@
           <div id="content" class="content">
             
   <section id="posts" class="posts-expand">
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/07/分布式一致性协议/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="xiong feng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="A little thought">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/03/07/分布式一致性协议/" itemprop="url">
-                  也来说说分布式一致性协议-Paxos
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Veröffentlicht am</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-07T18:11:58+08:00">
-                2017-03-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>这篇文章根据16年刚读完Paxos论文的时候写的笔记整理而来</p>
-</blockquote>
-<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><p>一致性就是对数据在多个节点上保持一致的要求。</p>
-<p>上面这句话就是我觉得对一致性最简单的解释，如果还觉得有点迷糊，那就从我们相对熟悉的单机系统开始讲讲一致性吧。</p>
-<p>第一次接触一致性这个词是在读计算机组成原理书的时候，其中有讲到过缓存的一致性(Cahe Coherency)，以及MESI协议如何保证缓存上的顺序一致性。后来，又知道不同的体系结构提供了不同的内存模型，不同内存模型允许不同种类的指令乱序，并且由于store buffer的存在，并不能够保证一个核上的写操作能够马上被另一个核读到，我们需要使用内存屏障或者简单点用锁等同步原语来保证顺序一致性。这些一致性问题的产生，本质上是因为CPU的发展遇到了诸如功耗墙等瓶颈，为了提速转向了多核去发展，如果算上intel的超线程技术，4核的CPU已经非常普遍。但是，编译器和CPU在单核时代正确的乱序优化，到了多核时代就没法保证了，由于这些优化，共享内存的多个核看到的数据可能并不一致，这就导致了在不同内存模型下，程序员如何利用同步原语保证程序的正确执行。</p>
-<p>如果我们把一个多核CPU的每个核看做一个系统中的节点，那么，在这个多核CPU上运行的多线程程序，就好像运行在一个单机版本的“分布式”系统中一样，而这个所谓的分布式系统是Shared memory模型的。我们需要有手段和方法去保证这个系统上的每个节点也是就核看到的数据是一致的，这些方法在单机上，当然就是锁等同步原语啦。如果不涉及lock free等方式，只要正确的运用了锁，我们就能保证多个核看到的数据是一致的。</p>
-<p>所以，你看，我们平时经常用的各种锁，除了不就是用来保证一致性的嘛。</p>
-<p>但是，我们都知道由于诸如性能等种种原因，现实中的真正的多机分布式系统多是基于消息通信而不是共享内存模型的。同时，由于多机的引入，系统中的任何一个机器在任何时候都有可能宕机或者出现网络故障,延迟，这就引入的更大的复杂性，那么如何在这样的系统中就某个值达成一致呢？</p>
-<p>这就引入了我们今天的所要说到的各种分布式系统中的一致性协议。</p>
-<h3 id="Basic-Paxos"><a href="#Basic-Paxos" class="headerlink" title="Basic  Paxos"></a>Basic  Paxos</h3><p>“这世上只有一种一致性协议，那就是paxos”</p>
-<p>从这一句话就可以看出Paxos的地位，想要初步了解Paxos协议，可以去看lamport的那篇Paxos made simple论文。有关于这篇论文由来的前应后果，感兴趣的同学可以去查查，这里就不八卦啦。</p>
-<p>根据这篇论文，我们可以把最基础的Paxos协议分成两个阶段，分别是prepare阶段和accept阶段，整体的流程如下：</p>
-<pre><code>- 1. 准备阶段：
-    - 1. proposer选择一个提案编号n并将prepare请求发送给acceptors中的一个多数派；
-    - 2. acceptor收到prepare消息后，如果提案的编号大于它已经回复的所有prepare消息，则acceptor将自己上次接受的提案回复给proposer，并承诺不再回复小于n的提案；
-
-- 2. 批准阶段：
-    - 1. 当一个proposer收到了多数acceptors对prepare的回复后，就进入批准阶段。它要向回复prepare请求的acceptors发送accept请求，包括编号n和根据P2c决定的value（如果根据P2c没有已经接受的value，那么它可以自由决定value）。
-    - 2. 在不违背自己向其他proposer的承诺的前提下，acceptor收到accept请求后即接受这个请求。
-</code></pre><p>其实，回想自己第一次看这篇论文，觉得流程我都懂了，但是就是不知道为什么要这么设计，下面，我就简单说说整体流程中各个步骤原因。</p>
-<p>我们知道，Paxos设计出来就是为了保证，在一个分布式系统，系统成员如何对一个值达成一致。这样有什么好处呢，如果把每个系统成员当做一个状态机(RSM)，系统一开始的时候当然每个成员都有相同的初始状态，如果成员们对于每次状态变更都能够达成一致，那么，在经过了一系列的操作之后，整个系统中的成员就都能达到一个相同的结束状态。在paxos中，我们把发起操作请求的节点叫做发起者（Proposer），接受操作请求的节点叫做接受者（accepter），paxos没有对哪个节点能做什么做出限制，也就是说每个节点既可以当发送者又可以当接受者。</p>
-<p>在聊paxos协议的具体设计前，我想说说设计的协议需要保证些什么。</p>
-<p>为了解决一致性的问题，Paxos需要保证些什么呢？</p>
-<ul>
-<li>1 如果一个值被批准了，那么不能被后来批准的值覆盖掉(safety)</li>
-<li>2 那些不知道批准的值得节点，可以学习到批准的值，不能学习到没有被批准的值(Validity)</li>
-<li>3 paxos协议不能一直在运行，那些没有失败的节点应该能够就某个值达成一致 (Termination)</li>
-</ul>
-<p>可以看到，这些要求都是显而易见的。</p>
-<p>paxos规定了一个值只有被大多数节点accept了才能是被批准了。那么怎么才能满足上面的要求同时又能达成一致也就是让大多数节点接受某个值呢。我们先抛开lamport设计的流程，自己来设计一个一致性协议。</p>
-<p>我们先来看看最简单的情况，所有节点都接受它第一次收到的值，哪个值被大多数节点接受了哪个值就是被批准的。</p>
-<p>但是这里存在一个问题，怎们才能保证一定有值被大多数节点接受，如果没有值被大多数节点接受呢？那岂不是就是没有值被批准，如果重新去提出新的值，所有节点又都不接受了，协议就会卡在这一步，不满足我们前面提到的第三点要求，这种方案不行。</p>
-<p>上个方案不行，看来我们得另谋出路。只接受一个值是不行的，这会让协议卡在某一步。那接受多个值，如果在某一轮中没有值被大多数节点接受，我们就可以发起新的投票，让节点接受新的值，这样，就会有值被大多数节点接受了。这个想法很好，但是还是不可以，让我们来看看为什么，如果在某个系统中有五个节点，一开始大多数节点接受值A，后来又接受了值B，那么B就会覆盖A，这样就会违反我们前面提到的要求一，所以还是不行。</p>
-<p>第二个方案思路是对的，但是我们要解决不能让后面值B覆盖已经批准的值A，怎么办呢？每个接受节点没法知道它接受的值是不是已经形成大多数了，它只能被动的接受值，那看来我们只有换个思路，从只得发送者入手，让发送者来保证一旦有值被大多数节点接受了，就不能发送新的值，只能发送被批准的旧值。这一步看起来就比较巧妙的解决了值覆盖的问题。注意，只是看起来而已。发送者在发送前需要检查有没有值已经被接受，然后再决定发送的值，这有什么问题呢？熟悉多线程编程的同学可能就会发现，这一步的操作并不是原子的，也就是说在检查完发现没有值被大多数节点接受之后，到发送新的值之前，在这段时间中，系统可能已经批准了一个值，而后发的新值就有可能会覆盖这个被批准的值。所以，这个方案还是有问题。</p>
-<p>连着三个方案被否决，是不是有点气馁呢，不要着急，我们已经到最后一步了，结合第三个方案，我们要保证被批准的值不会被覆盖。怎么解决呢？回想上一个方案之所以被否决，就是因为从查询到发送值这一步操作不是原子的，这个问题是不是有点眼熟，还没看出来我换个词你就懂了，我们把查询换做测试(test)，把发送值换做设置(set)，是不是看出来，这不是就是无锁编程中常用的TEST-AND-SET吗？那么在分布式系统中没有TAS原语，但是我们可以修改协议让不同的prepare请求有不同的ID，ID更大的请求会“锁住”acceptor，不让其接受ID更小的prepare请求。这样就不会有上面的问题了。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>上面我从最简单最直观的想法一步步推出了Basic Paxos协议的基本内容，现在看来paxos中任何一步都是必要的，虽然Basic Paxos由于性能的原因很少被用在实际系统中，但是，由其催生出的Multi Paxos， raft正广泛应用在实际的分布式系统中，在其中扮演着重要的作用。</p>
-<p>补充: 文章一开头写的一致性那一节，为了简单，就没有提各种不同的一致性，现在看，觉得好像写的会让人误以为一致性就是顺序一致性一样，其实并不是这样的。现实系统中常常为了可用性放弃强一致性，改用弱一致性。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/Paxos_(computer_science" target="_blank" rel="external">Paxos Wiki</a></p>
-<p><a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/paxos-simple-Copy.pdf" target="_blank" rel="external">Paxos Made Simple</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
     
       
 
@@ -431,7 +274,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-07T17:41:45+08:00">
                 2017-03-07
@@ -564,7 +407,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-07T17:41:13+08:00">
                 2017-03-07
@@ -697,7 +540,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-06T22:20:33+08:00">
                 2017-03-06
@@ -837,7 +680,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-06T18:35:40+08:00">
                 2017-03-06
@@ -974,7 +817,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-06T17:50:27+08:00">
                 2017-03-06
@@ -1127,7 +970,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-05T20:02:13+08:00">
                 2017-03-05
@@ -1207,6 +1050,163 @@
 
 
     
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/08/18/分布式一致性协议/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2015/08/18/分布式一致性协议/" itemprop="url">
+                  也来说说分布式一致性协议-Paxos
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2015-08-18T10:36:21+08:00">
+                2015-08-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>这篇文章根据16年刚读完Paxos论文的时候写的笔记整理而来</p>
+</blockquote>
+<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><p>一致性就是对数据在多个节点上保持一致的要求。</p>
+<p>上面这句话就是我觉得对一致性最简单的解释，如果还觉得有点迷糊，那就从我们相对熟悉的单机系统开始讲讲一致性吧。</p>
+<p>第一次接触一致性这个词是在读计算机组成原理书的时候，其中有讲到过缓存的一致性(Cahe Coherency)，以及MESI协议如何保证缓存上的顺序一致性。后来，又知道不同的体系结构提供了不同的内存模型，不同内存模型允许不同种类的指令乱序，并且由于store buffer的存在，并不能够保证一个核上的写操作能够马上被另一个核读到，我们需要使用内存屏障或者简单点用锁等同步原语来保证顺序一致性。这些一致性问题的产生，本质上是因为CPU的发展遇到了诸如功耗墙等瓶颈，为了提速转向了多核去发展，如果算上intel的超线程技术，4核的CPU已经非常普遍。但是，编译器和CPU在单核时代正确的乱序优化，到了多核时代就没法保证了，由于这些优化，共享内存的多个核看到的数据可能并不一致，这就导致了在不同内存模型下，程序员如何利用同步原语保证程序的正确执行。</p>
+<p>如果我们把一个多核CPU的每个核看做一个系统中的节点，那么，在这个多核CPU上运行的多线程程序，就好像运行在一个单机版本的“分布式”系统中一样，而这个所谓的分布式系统是Shared memory模型的。我们需要有手段和方法去保证这个系统上的每个节点也是就核看到的数据是一致的，这些方法在单机上，当然就是锁等同步原语啦。如果不涉及lock free等方式，只要正确的运用了锁，我们就能保证多个核看到的数据是一致的。</p>
+<p>所以，你看，我们平时经常用的各种锁，除了不就是用来保证一致性的嘛。</p>
+<p>但是，我们都知道由于诸如性能等种种原因，现实中的真正的多机分布式系统多是基于消息通信而不是共享内存模型的。同时，由于多机的引入，系统中的任何一个机器在任何时候都有可能宕机或者出现网络故障,延迟，这就引入的更大的复杂性，那么如何在这样的系统中就某个值达成一致呢？</p>
+<p>这就引入了我们今天的所要说到的各种分布式系统中的一致性协议。</p>
+<h3 id="Basic-Paxos"><a href="#Basic-Paxos" class="headerlink" title="Basic  Paxos"></a>Basic  Paxos</h3><p>“这世上只有一种一致性协议，那就是paxos”</p>
+<p>从这一句话就可以看出Paxos的地位，想要初步了解Paxos协议，可以去看lamport的那篇Paxos made simple论文。有关于这篇论文由来的前应后果，感兴趣的同学可以去查查，这里就不八卦啦。</p>
+<p>根据这篇论文，我们可以把最基础的Paxos协议分成两个阶段，分别是prepare阶段和accept阶段，整体的流程如下：</p>
+<pre><code>- 1. 准备阶段：
+    - 1. proposer选择一个提案编号n并将prepare请求发送给acceptors中的一个多数派；
+    - 2. acceptor收到prepare消息后，如果提案的编号大于它已经回复的所有prepare消息，则acceptor将自己上次接受的提案回复给proposer，并承诺不再回复小于n的提案；
+
+- 2. 批准阶段：
+    - 1. 当一个proposer收到了多数acceptors对prepare的回复后，就进入批准阶段。它要向回复prepare请求的acceptors发送accept请求，包括编号n和根据P2c决定的value（如果根据P2c没有已经接受的value，那么它可以自由决定value）。
+    - 2. 在不违背自己向其他proposer的承诺的前提下，acceptor收到accept请求后即接受这个请求。
+</code></pre><p>其实，回想自己第一次看这篇论文，觉得流程我都懂了，但是就是不知道为什么要这么设计，下面，我就简单说说整体流程中各个步骤原因。</p>
+<p>我们知道，Paxos设计出来就是为了保证，在一个分布式系统，系统成员如何对一个值达成一致。这样有什么好处呢，如果把每个系统成员当做一个状态机(RSM)，系统一开始的时候当然每个成员都有相同的初始状态，如果成员们对于每次状态变更都能够达成一致，那么，在经过了一系列的操作之后，整个系统中的成员就都能达到一个相同的结束状态。在paxos中，我们把发起操作请求的节点叫做发起者（Proposer），接受操作请求的节点叫做接受者（accepter），paxos没有对哪个节点能做什么做出限制，也就是说每个节点既可以当发送者又可以当接受者。</p>
+<p>在聊paxos协议的具体设计前，我想说说设计的协议需要保证些什么。</p>
+<p>为了解决一致性的问题，Paxos需要保证些什么呢？</p>
+<ul>
+<li>1 如果一个值被批准了，那么不能被后来批准的值覆盖掉(safety)</li>
+<li>2 那些不知道批准的值得节点，可以学习到批准的值，不能学习到没有被批准的值(Validity)</li>
+<li>3 paxos协议不能一直在运行，那些没有失败的节点应该能够就某个值达成一致 (Termination)</li>
+</ul>
+<p>可以看到，这些要求都是显而易见的。</p>
+<p>paxos规定了一个值只有被大多数节点accept了才能是被批准了。那么怎么才能满足上面的要求同时又能达成一致也就是让大多数节点接受某个值呢。我们先抛开lamport设计的流程，自己来设计一个一致性协议。</p>
+<p>我们先来看看最简单的情况，所有节点都接受它第一次收到的值，哪个值被大多数节点接受了哪个值就是被批准的。</p>
+<p>但是这里存在一个问题，怎们才能保证一定有值被大多数节点接受，如果没有值被大多数节点接受呢？那岂不是就是没有值被批准，如果重新去提出新的值，所有节点又都不接受了，协议就会卡在这一步，不满足我们前面提到的第三点要求，这种方案不行。</p>
+<p>上个方案不行，看来我们得另谋出路。只接受一个值是不行的，这会让协议卡在某一步。那接受多个值，如果在某一轮中没有值被大多数节点接受，我们就可以发起新的投票，让节点接受新的值，这样，就会有值被大多数节点接受了。这个想法很好，但是还是不可以，让我们来看看为什么，如果在某个系统中有五个节点，一开始大多数节点接受值A，后来又接受了值B，那么B就会覆盖A，这样就会违反我们前面提到的要求一，所以还是不行。</p>
+<p>第二个方案思路是对的，但是我们要解决不能让后面值B覆盖已经批准的值A，怎么办呢？每个接受节点没法知道它接受的值是不是已经形成大多数了，它只能被动的接受值，那看来我们只有换个思路，从只得发送者入手，让发送者来保证一旦有值被大多数节点接受了，就不能发送新的值，只能发送被批准的旧值。这一步看起来就比较巧妙的解决了值覆盖的问题。注意，只是看起来而已。发送者在发送前需要检查有没有值已经被接受，然后再决定发送的值，这有什么问题呢？熟悉多线程编程的同学可能就会发现，这一步的操作并不是原子的，也就是说在检查完发现没有值被大多数节点接受之后，到发送新的值之前，在这段时间中，系统可能已经批准了一个值，而后发的新值就有可能会覆盖这个被批准的值。所以，这个方案还是有问题。</p>
+<p>连着三个方案被否决，是不是有点气馁呢，不要着急，我们已经到最后一步了，结合第三个方案，我们要保证被批准的值不会被覆盖。怎么解决呢？回想上一个方案之所以被否决，就是因为从查询到发送值这一步操作不是原子的，这个问题是不是有点眼熟，还没看出来我换个词你就懂了，我们把查询换做测试(test)，把发送值换做设置(set)，是不是看出来，这不是就是无锁编程中常用的TEST-AND-SET吗？那么在分布式系统中没有TAS原语，但是我们可以修改协议让不同的prepare请求有不同的ID，ID更大的请求会“锁住”acceptor，不让其接受ID更小的prepare请求。这样就不会有上面的问题了。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>上面我从最简单最直观的想法一步步推出了Basic Paxos协议的基本内容，现在看来paxos中任何一步都是必要的，虽然Basic Paxos由于性能的原因很少被用在实际系统中，但是，由其催生出的Multi Paxos， raft正广泛应用在实际的分布式系统中，在其中扮演着重要的作用。</p>
+<p>补充: 文章一开头写的一致性那一节，为了简单，就没有提各种不同的一致性，现在看，觉得好像写的会让人误以为一致性就是顺序一致性一样，其实并不是这样的。现实系统中常常为了可用性放弃强一致性，改用弱一致性。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/Paxos_(computer_science" target="_blank" rel="external">Paxos Wiki</a></p>
+<p><a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/paxos-simple-Copy.pdf" target="_blank" rel="external">Paxos Made Simple</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
   </section>
 
   
@@ -1253,7 +1253,7 @@
             <div class="site-state-item site-state-posts">
               <a href="/archives">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">Artikel</span>
+                <span class="site-state-item-name">posts</span>
               </a>
             </div>
           
@@ -1307,7 +1307,7 @@
 
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
