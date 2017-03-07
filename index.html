@@ -817,6 +817,139 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/03/从callback到coroutine/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/09/03/从callback到coroutine/" itemprop="url">
+                  从callback到coroutine
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-09-03T16:36:21+08:00">
+                2016-09-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 </p>
+</blockquote>
+<p>对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。</p>
+<p>不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术却来了好几次大转身，要弄懂这背后的历史演变，或许Dan Kegel写的”[The C10K problem][3]”是最好的介绍文章。</p>
+<p>我在这里就不想要介绍所有的并发处理手段，毕竟那样写起来好几天都写不完，只想要说一下其中一种方法–异步（<strong>Asynchronous</strong>）处理，以及它在python中的具体的实现演进。</p>
+<h2 id="异步非阻塞"><a href="#异步非阻塞" class="headerlink" title="异步非阻塞"></a>异步非阻塞</h2><p>异步从来都是和非阻塞联系在一起的，毕竟，你要是阻塞在某一个具体的系统调用上，又怎么去异步处理别的请求呢。在这里我们都不考虑多线程的情况，仅仅考虑单线程下的异步非阻塞处理。为了解决前面提到的C10K问题，在FreeBSD上有了kqueue，在Linux上有了epoll，而Windows则推出了IOCP。具体来说，IOCP同其他两个并不一样，是<strong>Proactor</strong>和<strong>Reactor</strong>的区别，这里就不去具体展开来讲了。</p>
+<p>以用的最多的Linux的epoll为例，如果用它来实现一个异步非阻塞服务器，具体工作流程是以一个事件循环（EventLoop）阻塞在某个具体的公认端口上（比如80），当新的连接到来的时候，服务器就回去处理这个新的连接，但是要保证在处理新的连接的过程中不能陷入阻塞，而且用时要尽可能的短，好让事件循环尽快的回到公认端口的阻塞上来处理之后的连接。基本原理并不复杂，但是要想实现好可得颇费一番功夫。大名鼎鼎的Nginx已经libevent都是使用这种方式来工作的。</p>
+<h2 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h2><p>有了上面关于异步非阻塞的工作原理的介绍，那么该如何去实现呢？首先被想到的方法就是使用回调函数。<br>我们换一个角度去看看异步的使用，从传统的网络客户端的角度去看看如何用回调函数实现异步编程。</p>
+<p>从《Unix网络编程》中我们学习到，要实现连接到一个远端socket，我们先要调用connect系统调用，阻塞在上面，等其返回以后，建立起同远端socket的连接，然后时候发送请求，然后又阻塞在recv调用上，等待远端socket返回数据（其实send调用默认也是阻塞的，这里简化一下，就先当做非阻塞的吧）。<br>好了，上面就是一个完整的同远端socket的一次”Request-Reply”过程。如果我要用一步的手段来完成该怎么做呢？</p>
+<p>注意到异步的处理中一定不能阻塞，所以我上面强调了两处阻塞（不算send）一处在connect的时候，一处在recv的时候，如果要用回调函数的手段去做，那么，就不得不把程序拆成几块，每一次拆分就是根据程序阻塞的位置来的。比如说，在这里，我们要把程序拆成三段，在每一次被阻塞的时候都要设置一个回调函数，然后回到事件循环的处理中间去。当系统调用从阻塞中返回的时候，就会调用我们之前设置的回调函数，继续接下来的处理。</p>
+<p>你肯定已经发现问题的所在了，当我们阻塞的系统调用越多的时候，我们的程序就必须被拆分成越多的块，我们的代码支离破碎，不仅不方便阅读，也更加不方便调试，当在回调函数中有异常被触发的时候，在打印出来的函数调用栈的关系中，根本找不到更上层的代码。我知道你可能会说zeroMQ用起来会简单一点，但这里那不是我们讨论的重点。<br>回调函数中这样的问题被称作spaghetti code，就是说代码太过绕了，让人不知所云。</p>
+<p>用同步的方式来写程序只要一个函数就好，可是被阻塞又不能充分的发挥我们CPU的效能，异步回调的方式固然能处理更多的连接，但是代码写起来又太过复杂，那么有么有什么方法能结合这两者的优点呢？好了，coroutine呼之欲出了。</p>
+<h2 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h2><p>提到python就不能不提协程，不是因为这是它首创的，而是在解释器全局锁的大背景下，多线程的能力被大大削弱，使用协程来在单线程中处理并发成了不得已而为之而又非常漂亮的手段（这里一定要提一下，并不是说单线程异步就一定要比多线程的效果好，单线程异步只是在有大量的非活跃连接的时候，会有更优的性能）。</p>
+<p>如何在代码中使用协程呢？python 3.4将asyncio引进的标准库，3.5更是专门增加了两个关键字async和await来处理协程，现在，在代码中使用协程已经非常方便了。<br>协程的概念大家都知道，背后的原理本质上就是在用户态来实现处理块的调度，减少内核态线程调度的开销。它的出现就是为了解决前面提到了spaghetti code的问题，使用协程来写代码，抛开前面提到了两个关键字，几乎就和同步阻塞的写法一模一样了。在有阻塞的地方，我们只要用async 将函数包裹起来，然后在主函数中使用await关键字来调用我们的异步函数，就可以了。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/22/ftp server设计/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1176,139 +1309,6 @@
 <p>所以，现在我在Evernote里记录了很多，但是却没有输出一篇博客。</p>
 <h2 id="为什么又开始写了"><a href="#为什么又开始写了" class="headerlink" title="为什么又开始写了"></a>为什么又开始写了</h2><p>读了这一篇文章<a href="http://mindhacks.cn/2009/02/15/why-you-should-start-blogging-now/" target="_blank" rel="external">为什么你应该（从现在开始就）写博客</a>，学到了很多，其中最认同的是在书写的过程中也会发现自己很多没有弄懂的地方，所以我会时不时的把Evernote里的笔记整理一下，写一写博客。</p>
 <p>希望这次能坚持下去。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/05/03/从callback到coroutine/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="xiong feng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="A little thought">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/05/03/从callback到coroutine/" itemprop="url">
-                  从callback到coroutine
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Veröffentlicht am</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-05-03T16:36:21+08:00">
-                2016-05-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 </p>
-</blockquote>
-<p>对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。</p>
-<p>不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术却来了好几次大转身，要弄懂这背后的历史演变，或许Dan Kegel写的”[The C10K problem][3]”是最好的介绍文章。</p>
-<p>我在这里就不想要介绍所有的并发处理手段，毕竟那样写起来好几天都写不完，只想要说一下其中一种方法–异步（<strong>Asynchronous</strong>）处理，以及它在python中的具体的实现演进。</p>
-<h2 id="异步非阻塞"><a href="#异步非阻塞" class="headerlink" title="异步非阻塞"></a>异步非阻塞</h2><p>异步从来都是和非阻塞联系在一起的，毕竟，你要是阻塞在某一个具体的系统调用上，又怎么去异步处理别的请求呢。在这里我们都不考虑多线程的情况，仅仅考虑单线程下的异步非阻塞处理。为了解决前面提到的C10K问题，在FreeBSD上有了kqueue，在Linux上有了epoll，而Windows则推出了IOCP。具体来说，IOCP同其他两个并不一样，是<strong>Proactor</strong>和<strong>Reactor</strong>的区别，这里就不去具体展开来讲了。</p>
-<p>以用的最多的Linux的epoll为例，如果用它来实现一个异步非阻塞服务器，具体工作流程是以一个事件循环（EventLoop）阻塞在某个具体的公认端口上（比如80），当新的连接到来的时候，服务器就回去处理这个新的连接，但是要保证在处理新的连接的过程中不能陷入阻塞，而且用时要尽可能的短，好让事件循环尽快的回到公认端口的阻塞上来处理之后的连接。基本原理并不复杂，但是要想实现好可得颇费一番功夫。大名鼎鼎的Nginx已经libevent都是使用这种方式来工作的。</p>
-<h2 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h2><p>有了上面关于异步非阻塞的工作原理的介绍，那么该如何去实现呢？首先被想到的方法就是使用回调函数。<br>我们换一个角度去看看异步的使用，从传统的网络客户端的角度去看看如何用回调函数实现异步编程。</p>
-<p>从《Unix网络编程》中我们学习到，要实现连接到一个远端socket，我们先要调用connect系统调用，阻塞在上面，等其返回以后，建立起同远端socket的连接，然后时候发送请求，然后又阻塞在recv调用上，等待远端socket返回数据（其实send调用默认也是阻塞的，这里简化一下，就先当做非阻塞的吧）。<br>好了，上面就是一个完整的同远端socket的一次”Request-Reply”过程。如果我要用一步的手段来完成该怎么做呢？</p>
-<p>注意到异步的处理中一定不能阻塞，所以我上面强调了两处阻塞（不算send）一处在connect的时候，一处在recv的时候，如果要用回调函数的手段去做，那么，就不得不把程序拆成几块，每一次拆分就是根据程序阻塞的位置来的。比如说，在这里，我们要把程序拆成三段，在每一次被阻塞的时候都要设置一个回调函数，然后回到事件循环的处理中间去。当系统调用从阻塞中返回的时候，就会调用我们之前设置的回调函数，继续接下来的处理。</p>
-<p>你肯定已经发现问题的所在了，当我们阻塞的系统调用越多的时候，我们的程序就必须被拆分成越多的块，我们的代码支离破碎，不仅不方便阅读，也更加不方便调试，当在回调函数中有异常被触发的时候，在打印出来的函数调用栈的关系中，根本找不到更上层的代码。我知道你可能会说zeroMQ用起来会简单一点，但这里那不是我们讨论的重点。<br>回调函数中这样的问题被称作spaghetti code，就是说代码太过绕了，让人不知所云。</p>
-<p>用同步的方式来写程序只要一个函数就好，可是被阻塞又不能充分的发挥我们CPU的效能，异步回调的方式固然能处理更多的连接，但是代码写起来又太过复杂，那么有么有什么方法能结合这两者的优点呢？好了，coroutine呼之欲出了。</p>
-<h2 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h2><p>提到python就不能不提协程，不是因为这是它首创的，而是在解释器全局锁的大背景下，多线程的能力被大大削弱，使用协程来在单线程中处理并发成了不得已而为之而又非常漂亮的手段（这里一定要提一下，并不是说单线程异步就一定要比多线程的效果好，单线程异步只是在有大量的非活跃连接的时候，会有更优的性能）。</p>
-<p>如何在代码中使用协程呢？python 3.4将asyncio引进的标准库，3.5更是专门增加了两个关键字async和await来处理协程，现在，在代码中使用协程已经非常方便了。<br>协程的概念大家都知道，背后的原理本质上就是在用户态来实现处理块的调度，减少内核态线程调度的开销。它的出现就是为了解决前面提到了spaghetti code的问题，使用协程来写代码，抛开前面提到了两个关键字，几乎就和同步阻塞的写法一模一样了。在有阻塞的地方，我们只要用async 将函数包裹起来，然后在主函数中使用await关键字来调用我们的异步函数，就可以了。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
 
           
         
