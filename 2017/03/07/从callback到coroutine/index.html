@@ -89,23 +89,23 @@
 
 <meta name="description" content="这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 
 
-对于如今的服务器，C10K的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看comet）。
-不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术">
+对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。
+不过，不同于C1000K相对于C10K只是多了两个0，">
 <meta property="og:type" content="article">
 <meta property="og:title" content="从callback到coroutine">
 <meta property="og:url" content="http://yoursite.com/2017/03/07/从callback到coroutine/index.html">
 <meta property="og:site_name" content="A little thought">
 <meta property="og:description" content="这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 
 
-对于如今的服务器，C10K的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看comet）。
-不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术">
-<meta property="og:updated_time" content="2017-03-07T09:48:24.411Z">
+对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。
+不过，不同于C1000K相对于C10K只是多了两个0，">
+<meta property="og:updated_time" content="2017-03-07T10:10:06.973Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="从callback到coroutine">
 <meta name="twitter:description" content="这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 
 
-对于如今的服务器，C10K的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看comet）。
-不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术">
+对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。
+不过，不同于C1000K相对于C10K只是多了两个0，">
 
 
 
@@ -323,8 +323,8 @@
         <blockquote>
 <p>这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 </p>
 </blockquote>
-<p>对于如今的服务器，<a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10K</a>的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看<a href="https://github.com/ideawu/icomet" target="_blank" rel="external">comet</a>）。</p>
-<p>不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术却来了好几次大转身，要弄懂这背后的历史演变，或许Dan Kegel写的”<a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">The C10K problem</a>“是最好的介绍文章。</p>
+<p>对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。</p>
+<p>不过，不同于C1000K相对于C10K只是多了两个0，这背后处理并发的技术却来了好几次大转身，要弄懂这背后的历史演变，或许Dan Kegel写的”[The C10K problem][3]”是最好的介绍文章。</p>
 <p>我在这里就不想要介绍所有的并发处理手段，毕竟那样写起来好几天都写不完，只想要说一下其中一种方法–异步（<strong>Asynchronous</strong>）处理，以及它在python中的具体的实现演进。</p>
 <p>##异步非阻塞<br>异步从来都是和非阻塞联系在一起的，毕竟，你要是阻塞在某一个具体的系统调用上，又怎么去异步处理别的请求呢。在这里我们都不考虑多线程的情况，仅仅考虑单线程下的异步非阻塞处理。为了解决前面提到的C10K问题，在FreeBSD上有了kqueue，在Linux上有了epoll，而Windows则推出了IOCP。具体来说，IOCP同其他两个并不一样，是<strong>Proactor</strong>和<strong>Reactor</strong>的区别，这里就不去具体展开来讲了。</p>
 <p>以用的最多的Linux的epoll为例，如果用它来实现一个异步非阻塞服务器，具体工作流程是以一个事件循环（EventLoop）阻塞在某个具体的公认端口上（比如80），当新的连接到来的时候，服务器就回去处理这个新的连接，但是要保证在处理新的连接的过程中不能陷入阻塞，而且用时要尽可能的短，好让事件循环尽快的回到公认端口的阻塞上来处理之后的连接。基本原理并不复杂，但是要想实现好可得颇费一番功夫。大名鼎鼎的Nginx已经libevent都是使用这种方式来工作的。</p>
@@ -335,7 +335,7 @@
 <p>用同步的方式来写程序只要一个函数就好，可是被阻塞又不能充分的发挥我们CPU的效能，异步回调的方式固然能处理更多的连接，但是代码写起来又太过复杂，那么有么有什么方法能结合这两者的优点呢？好了，coroutine呼之欲出了。</p>
 <p>##协程<br>提到python就不能不提协程，不是因为这是它首创的，而是在解释器全局锁的大背景下，多线程的能力被大大削弱，使用协程来在单线程中处理并发成了不得已而为之而又非常漂亮的手段（这里一定要提一下，并不是说单线程异步就一定要比多线程的效果好，单线程异步只是在有大量的非活跃连接的时候，会有更优的性能）。</p>
 <p>如何在代码中使用协程呢？python 3.4将asyncio引进的标准库，3.5更是专门增加了两个关键字async和await来处理协程，现在，在代码中使用协程已经非常方便了。<br>协程的概念大家都知道，背后的原理本质上就是在用户态来实现处理块的调度，减少内核态线程调度的开销。它的出现就是为了解决前面提到了spaghetti code的问题，使用协程来写代码，抛开前面提到了两个关键字，几乎就和同步阻塞的写法一模一样了。在有阻塞的地方，我们只要用async 将函数包裹起来，然后在主函数中使用await关键字来调用我们的异步函数，就可以了。</p>
-<p>##参考</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
 
       
     </div>
@@ -375,6 +375,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/03/07/分布式一致性协议/" rel="prev" title="也来说说分布式一致性协议-paxos">
+                也来说说分布式一致性协议-paxos <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -421,8 +425,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.gif"
@@ -437,7 +450,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">Artikel</span>
               </a>
             </div>
@@ -466,6 +479,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">1.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
