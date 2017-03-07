@@ -87,19 +87,25 @@
 
 
 
-<meta name="description" content="一个后台应用基本上可以笼统的分为网络连接层，逻辑业务层和数据存储层三层。就像我在之前开篇里提到过的，MiniRpc没有做消息的持久化存储，所有基本上只有两层： 网络连接层和逻辑层。这一篇我就来记录下网络层中的一些技术选型和各种自己给自己挖的坑。
-ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reactor模式中，事件分离者等待某个事件或者可应用或个操作的状">
+<meta name="description" content="这是新博客的第一篇，做个纪念。
+为什么以前没有写下去之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。
+还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。
+所以，去年，我在Evernot">
 <meta property="og:type" content="article">
-<meta property="og:title" content="MiniRpc 连接层">
-<meta property="og:url" content="http://yoursite.com/2017/03/03/MiniRpc2/index.html">
+<meta property="og:title" content="我为什么又开始写博客">
+<meta property="og:url" content="http://yoursite.com/2016/06/20/about/index.html">
 <meta property="og:site_name" content="A little thought">
-<meta property="og:description" content="一个后台应用基本上可以笼统的分为网络连接层，逻辑业务层和数据存储层三层。就像我在之前开篇里提到过的，MiniRpc没有做消息的持久化存储，所有基本上只有两层： 网络连接层和逻辑层。这一篇我就来记录下网络层中的一些技术选型和各种自己给自己挖的坑。
-ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reactor模式中，事件分离者等待某个事件或者可应用或个操作的状">
-<meta property="og:updated_time" content="2017-03-07T13:22:44.593Z">
+<meta property="og:description" content="这是新博客的第一篇，做个纪念。
+为什么以前没有写下去之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。
+还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。
+所以，去年，我在Evernot">
+<meta property="og:updated_time" content="2017-03-07T13:29:45.358Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="MiniRpc 连接层">
-<meta name="twitter:description" content="一个后台应用基本上可以笼统的分为网络连接层，逻辑业务层和数据存储层三层。就像我在之前开篇里提到过的，MiniRpc没有做消息的持久化存储，所有基本上只有两层： 网络连接层和逻辑层。这一篇我就来记录下网络层中的一些技术选型和各种自己给自己挖的坑。
-ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reactor模式中，事件分离者等待某个事件或者可应用或个操作的状">
+<meta name="twitter:title" content="我为什么又开始写博客">
+<meta name="twitter:description" content="这是新博客的第一篇，做个纪念。
+为什么以前没有写下去之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。
+还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。
+所以，去年，我在Evernot">
 
 
 
@@ -127,13 +133,13 @@ ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reacto
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/03/03/MiniRpc2/"/>
+  <link rel="canonical" href="http://yoursite.com/2016/06/20/about/"/>
 
 
 
 
 
-  <title> MiniRpc 连接层 | A little thought </title>
+  <title> 我为什么又开始写博客 | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -242,7 +248,7 @@ ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reacto
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/03/MiniRpc2/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/06/20/about/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -263,7 +269,7 @@ ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reacto
             
             
               
-                MiniRpc 连接层
+                我为什么又开始写博客
               
             
           </h1>
@@ -278,8 +284,8 @@ ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reacto
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-03T10:36:21+08:00">
-                2017-03-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-06-20T10:36:21+08:00">
+                2016-06-20
               </time>
             
 
@@ -314,22 +320,12 @@ ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reacto
       
 
       
-        <p>一个后台应用基本上可以笼统的分为网络连接层，逻辑业务层和数据存储层三层。就像我在之前开篇里提到过的，MiniRpc没有做消息的持久化存储，所有基本上只有两层： 网络连接层和逻辑层。这一篇我就来记录下网络层中的一些技术选型和各种自己给自己挖的坑。</p>
-<h3 id="ReactorLoop"><a href="#ReactorLoop" class="headerlink" title="ReactorLoop"></a>ReactorLoop</h3><p>linux下做tcp高并发绕不开的IO模式-Reactor模式。在Reactor模式中，事件分离者等待某个事件或者可应用或个操作的状态发生（比如文件描述符可读写，或者是socket可读写），事件分离者就把这个事件传给事先注册的事件处理函数或者回调函数，由后者来做实际的读写操作。</p>
-<p>在代码中我直接实现了ReactorLoop的类封装。为了完成这样的工作，需要抽象化出关注的事件Event和具体的IO复用机制IOMUtiplex。</p>
-<h3 id="IOMutiplex"><a href="#IOMutiplex" class="headerlink" title="IOMutiplex"></a>IOMutiplex</h3><p>在linux下实现IO多路复用最常用的系统调用就是epoll了，至于其他在unix网络编程中提到的select由于设计之初没有考虑大量连接的情况，所以每次都要轮询所有连接，效率不高基本已经很少使用了（另外不得不提到的一点是网上一搜都说epoll比select高效是因为使用了mmap减少文件描述符的拷贝，这个很不靠谱啊，我读过源代码没有找到这方面的内容，不知道是从哪里开始以讹传讹的）。</p>
-<p>在MiniRpc中，我一开始直接封装了epoll来做使用，后来想起来FreeBSD下类似的系统调用是kqueue，为了统一IO多路复用的机制，后面我重构成共同继承一个公共的基类IOMutiplex。由于我使用的是linux，所以没有做kqueue的封装，多添加了一个poll的类封装，当然，默认情况下使用的是epoll。</p>
-<h3 id="Event"><a href="#Event" class="headerlink" title="Event"></a>Event</h3><p>Event类抽象出ReactorLoop关注的事件。实际基本流程是通过ReactorLoop注册到IOMutiplex上。同时实现基于回调机制，Event还要添加关注的EventHandler，一般是读或者写。</p>
-<h3 id="技术细节"><a href="#技术细节" class="headerlink" title="技术细节"></a>技术细节</h3><p>大体的连接层框架就是上面的这些，基本上参考了libvent的设计（后来发现redis也是这么做的），下面我谈谈自己在实际完成的过程中遇到的要注意的地方。</p>
-<h5 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h5><p>使用多线程模型还是类似于Redis的单线程模型是在开发的一开始就应该定好的。这一点上我几乎是到最后面才决定从单线程转多线程的，那么就面临一个问题，epoll的并发操作。</p>
-<p>根据man page，当一个线程阻塞在epoll_wait调用上时，另一个线程并发的往其添加fd是线程安全的，但是并发的删除fd是未定义的行为。</p>
-<p>MiniRpc中client端是用户线程向ReactorLoop添加新建立连接的fd，server端是多线程应用，为了实现线程安全，我最后面限定所有需要需要跨ReactorLoop的操作必须继承task类，在ReactorLoop中添加了一个vector，用来接收其他线程推送的task，在ReactorLoop线程从epoll_wait返回处理完活跃连接后，处理vector中存储的task事件，在这些task事件中添加或者删除关注的fd。</p>
-<p>这样做是线程安全了，但是vector需要靠mutex保护，锁的竞争可能会影响性能，后面需要想想解决的方案。</p>
-<h5 id="Buffer"><a href="#Buffer" class="headerlink" title="Buffer"></a>Buffer</h5><p>实现中Buffer类也是中途决定添加的，看来还是经验不足啊。对于非阻塞IO，MiniRpc必须提供Buffer来缓存message，这样才能做到异步调用。在实现上，Buffer类就是简单的包裹了vector并提供了需要的接口供其他类调用，vector数据连续，如果更加在乎性能的话，可以仿照libevent或者STL中的deque的设计，将buffer设计成即是链表有是连续的存储，提高性能。</p>
-<h5 id="非阻塞的connect"><a href="#非阻塞的connect" class="headerlink" title="非阻塞的connect"></a>非阻塞的connect</h5><p>Reactor模式要求在处理io操作的时候耗时尽可能的少，如果connect还是像传统那样阻塞住的话，则至少需要一个RTT的时间。所以需要换成非阻塞的connect，用select看是否可读可写，最后用getsocketop看是否连接出错，通过以上判断后才是成功连接。</p>
-<h5 id="资源所有权"><a href="#资源所有权" class="headerlink" title="资源所有权"></a>资源所有权</h5><p>下一篇也会提到这个，因为实在太重要了，在这上面吃了不少的亏。</p>
-<p>在一开始划分模块设计类的时候并没有考虑类的所有权关系，导致测试的后core dump不断，valgrind也检测出不少的内存的泄露错误。后来的解决办法就是尽可能的将new/delete替换成shared_ptr，这样做后内存泄露是没了，却又引发了其他的问题，具体问题下一篇在来介绍吧。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>一开始是没有网络连接层的设计，准备直接用libevent的，但是看完了它的大体框架后动了自己写一个的心思。现在看来，基本满足了后面rpc对网络连接层的需要，但肯定还是有很多不足，还需要多多完善。</p>
+        <p>这是新博客的第一篇，做个纪念。</p>
+<h2 id="为什么以前没有写下去"><a href="#为什么以前没有写下去" class="headerlink" title="为什么以前没有写下去"></a>为什么以前没有写下去</h2><p>之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。</p>
+<p>还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。</p>
+<p>所以，去年，我在Evernote里记录了很多，但是却没有输出一篇博客。</p>
+<h2 id="为什么又开始写了"><a href="#为什么又开始写了" class="headerlink" title="为什么又开始写了"></a>为什么又开始写了</h2><p>读了这一篇文章<a href="http://mindhacks.cn/2009/02/15/why-you-should-start-blogging-now/" target="_blank" rel="external">为什么你应该（从现在开始就）写博客</a>，学到了很多，其中最认同的是在书写的过程中也会发现自己很多没有弄懂的地方，所以我会时不时的把Evernote里的笔记整理一下，写一写博客。</p>
+<p>希望这次能坚持下去。</p>
 
       
     </div>
@@ -360,8 +356,8 @@ ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reacto
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/02/23/MiniRpc1/" rel="next" title="MiniRpc 开篇">
-                <i class="fa fa-chevron-left"></i> MiniRpc 开篇
+              <a href="/2016/05/03/从callback到coroutine/" rel="next" title="从callback到coroutine">
+                <i class="fa fa-chevron-left"></i> 从callback到coroutine
               </a>
             
           </div>
@@ -369,6 +365,10 @@ ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reacto
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/06/23/线程池/" rel="prev" title="实现一个简单的线程池">
+                实现一个简单的线程池 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -479,7 +479,7 @@ ReactorLooplinux下做tcp高并发绕不开的IO模式-Reactor模式。在Reacto
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ReactorLoop"><span class="nav-number">1.</span> <span class="nav-text">ReactorLoop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IOMutiplex"><span class="nav-number">2.</span> <span class="nav-text">IOMutiplex</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Event"><span class="nav-number">3.</span> <span class="nav-text">Event</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#技术细节"><span class="nav-number">4.</span> <span class="nav-text">技术细节</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#线程安全"><span class="nav-number">4.0.1.</span> <span class="nav-text">线程安全</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Buffer"><span class="nav-number">4.0.2.</span> <span class="nav-text">Buffer</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#非阻塞的connect"><span class="nav-number">4.0.3.</span> <span class="nav-text">非阻塞的connect</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#资源所有权"><span class="nav-number">4.0.4.</span> <span class="nav-text">资源所有权</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么以前没有写下去"><span class="nav-number">1.</span> <span class="nav-text">为什么以前没有写下去</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么又开始写了"><span class="nav-number">2.</span> <span class="nav-text">为什么又开始写了</span></a></li></ol></div>
             
 
           </div>
