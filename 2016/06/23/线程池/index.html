@@ -99,7 +99,7 @@
 
 在经典的C10K问题的解决方案中，有一种是多线程的解决思路。给出的解决思路是对到达的每一个请求，都动态的生成一个线程，来做单独的服务和和处理，如果是keep-alive的TCP连接(这个用的好像也不多)，服务线程就会一直工作到连接断开才退出。
 使用c或者c++来编写多线程的服务器有很多比较trick的问题需要注意，比如何时能安全的释放多个线程共">
-<meta property="og:updated_time" content="2017-03-07T13:29:02.948Z">
+<meta property="og:updated_time" content="2017-03-07T14:05:35.883Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="实现一个简单的线程池">
 <meta name="twitter:description" content="这篇文章根据16年写线程池时写的笔记扩展而来的。
@@ -338,7 +338,7 @@
 <h3 id="用C-来重构一下"><a href="#用C-来重构一下" class="headerlink" title="用C++来重构一下"></a>用C++来重构一下</h3><p>基本的原理同用C语言来实现是一样的，可是C++提供了更加丰富的语言特性，比如RAII。在用C语言实现的版本中，我们要记得在获取锁之后释放锁，不然就会造成一直占用锁，其他线程没有办法执行。</p>
 <p>但是，在C++中，我们可以用类包装锁资源，在类对象初始化的时候获取锁，在类对象析构的释放锁，将程序员的任务交给语言去完成，极大的减轻了程序员的负担和出错误的可能性。而且，使用类可以有更好的封装性。</p>
 <p>基本的实现就不多说了，提一下使用的类。可以将之前使用的互斥锁和条件变量包装成类。同时将前面的任务和线程池也该用类来实现。</p>
-<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://zh.wikipedia.org/wiki/HTTP%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5" target="_blank" rel="external">HTTP 1.1 keepalive</a><br><a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B%E6%B1%A0" target="_blank" rel="external">线程池 Wiki</a><br><a href="http://tutorials.jenkov.com/java-concurrency/thread-pools.html" target="_blank" rel="external">Thread Pools</a></p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://zh.wikipedia.org/wiki/HTTP%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5" target="_blank" rel="external">HTTP 1.1 keepalive</a><br><a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B%E6%B1%A0" target="_blank" rel="external">线程池 Wiki</a><br><a href="http://tutorials.jenkov.com/java-concurrency/thread-pools.html" target="_blank" rel="external">Thread Pools</a></p>
 
       
     </div>
@@ -492,7 +492,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#用C来实现"><span class="nav-number">1.</span> <span class="nav-text">用C来实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#用C-来重构一下"><span class="nav-number">2.</span> <span class="nav-text">用C++来重构一下</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number"></span> <span class="nav-text">Reference</span></a></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#用C来实现"><span class="nav-number">1.</span> <span class="nav-text">用C来实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#用C-来重构一下"><span class="nav-number">2.</span> <span class="nav-text">用C++来重构一下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">3.</span> <span class="nav-text">Reference</span></a></li></ol></div>
             
 
           </div>

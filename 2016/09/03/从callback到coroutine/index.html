@@ -99,7 +99,7 @@
 
 对于如今的服务器，[C10K][1]的问题已经得到解决，可是技术从来不会停下它前进的脚步，C100K甚至C1000K的都已经在程序员的规划中（C1000K的实现可以参看[comet][2]）。
 不过，不同于C1000K相对于C10K只是多了两个0，">
-<meta property="og:updated_time" content="2017-03-07T13:31:45.284Z">
+<meta property="og:updated_time" content="2017-03-07T14:05:56.100Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="从callback到coroutine">
 <meta name="twitter:description" content="这是16年写coroutine库前写的一篇笔记，现在看来对协程的介绍还是不深入，先直接放上来看看，后面会补一篇更详细介绍coroutine的文章 
@@ -335,7 +335,7 @@
 <p>用同步的方式来写程序只要一个函数就好，可是被阻塞又不能充分的发挥我们CPU的效能，异步回调的方式固然能处理更多的连接，但是代码写起来又太过复杂，那么有么有什么方法能结合这两者的优点呢？好了，coroutine呼之欲出了。</p>
 <h2 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h2><p>提到python就不能不提协程，不是因为这是它首创的，而是在解释器全局锁的大背景下，多线程的能力被大大削弱，使用协程来在单线程中处理并发成了不得已而为之而又非常漂亮的手段（这里一定要提一下，并不是说单线程异步就一定要比多线程的效果好，单线程异步只是在有大量的非活跃连接的时候，会有更优的性能）。</p>
 <p>如何在代码中使用协程呢？python 3.4将asyncio引进的标准库，3.5更是专门增加了两个关键字async和await来处理协程，现在，在代码中使用协程已经非常方便了。<br>协程的概念大家都知道，背后的原理本质上就是在用户态来实现处理块的调度，减少内核态线程调度的开销。它的出现就是为了解决前面提到了spaghetti code的问题，使用协程来写代码，抛开前面提到了两个关键字，几乎就和同步阻塞的写法一模一样了。在有阻塞的地方，我们只要用async 将函数包裹起来，然后在主函数中使用await关键字来调用我们的异步函数，就可以了。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
 
       
     </div>
@@ -489,7 +489,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#异步非阻塞"><span class="nav-number">1.</span> <span class="nav-text">异步非阻塞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回调函数"><span class="nav-number">2.</span> <span class="nav-text">回调函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#协程"><span class="nav-number">3.</span> <span class="nav-text">协程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">3.1.</span> <span class="nav-text">Reference</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#异步非阻塞"><span class="nav-number">1.</span> <span class="nav-text">异步非阻塞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回调函数"><span class="nav-number">2.</span> <span class="nav-text">回调函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#协程"><span class="nav-number">3.</span> <span class="nav-text">协程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
             
 
           </div>

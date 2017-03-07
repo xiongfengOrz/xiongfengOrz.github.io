@@ -443,7 +443,7 @@
 <h3 id="连接池"><a href="#连接池" class="headerlink" title="连接池"></a>连接池</h3><p>由于现在实现中都是短链接，频繁的断开建立链接需要消耗很多的资源和不少的时间，在server端，我使用了连接池。如果新的连接到来，就从连接池中取出一个空闲连接，连接关闭后将其放回连接池。</p>
 <h3 id="负载均衡"><a href="#负载均衡" class="headerlink" title="负载均衡"></a>负载均衡</h3><p>一开始没有设计多线程，仅仅在server端只有一个工作线程。最后面在服务器上运行测试的时候，发现性能比较差，才决定在服务端加上多线程的。</p>
 <p>最后面的架构是是一个IO线程负责accept新的连接，将新到来的连接按照简单的round-robin算法用线程安全的接口放入四个工作线程，此后，连接就由工作线程管理了。这样改变了之后，性能有所提高(但是还是不满意，后面还要继续优化)。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>###<br><a href="https://developers.google.com/protocol-buffers/" target="_blank" rel="external">ProtoBuf文档</a></p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://developers.google.com/protocol-buffers/" target="_blank" rel="external">ProtoBuf文档</a></p>
 
           
         
@@ -484,7 +484,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/20/MiniRpc3/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/10/MiniRpc3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -506,7 +506,7 @@
             
               
                 
-                <a class="post-title-link" href="/2017/02/20/MiniRpc3/" itemprop="url">
+                <a class="post-title-link" href="/2017/02/10/MiniRpc3/" itemprop="url">
                   MiniRpc 连接层
                 </a>
               
@@ -523,8 +523,8 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-20T10:36:21+08:00">
-                2017-02-20
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-10T10:36:21+08:00">
+                2017-02-10
               </time>
             
 
@@ -568,13 +568,13 @@
 <p>在MiniRpc中，我一开始直接封装了epoll来做使用，后来想起来FreeBSD下类似的系统调用是kqueue，为了统一IO多路复用的机制，后面我重构成共同继承一个公共的基类IOMutiplex。由于我使用的是linux，所以没有做kqueue的封装，多添加了一个poll的类封装，当然，默认情况下使用的是epoll。</p>
 <h3 id="Event"><a href="#Event" class="headerlink" title="Event"></a>Event</h3><p>Event类抽象出ReactorLoop关注的事件。实际基本流程是通过ReactorLoop注册到IOMutiplex上。同时实现基于回调机制，Event还要添加关注的EventHandler，一般是读或者写。</p>
 <h3 id="技术细节"><a href="#技术细节" class="headerlink" title="技术细节"></a>技术细节</h3><p>大体的连接层框架就是上面的这些，基本上参考了libvent的设计（后来发现redis也是这么做的），下面我谈谈自己在实际完成的过程中遇到的要注意的地方。</p>
-<h5 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h5><p>使用多线程模型还是类似于Redis的单线程模型是在开发的一开始就应该定好的。这一点上我几乎是到最后面才决定从单线程转多线程的，那么就面临一个问题，epoll的并发操作。</p>
+<h4 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h4><p>使用多线程模型还是类似于Redis的单线程模型是在开发的一开始就应该定好的。这一点上我几乎是到最后面才决定从单线程转多线程的，那么就面临一个问题，epoll的并发操作。</p>
 <p>根据man page，当一个线程阻塞在epoll_wait调用上时，另一个线程并发的往其添加fd是线程安全的，但是并发的删除fd是未定义的行为。</p>
 <p>MiniRpc中client端是用户线程向ReactorLoop添加新建立连接的fd，server端是多线程应用，为了实现线程安全，我最后面限定所有需要需要跨ReactorLoop的操作必须继承task类，在ReactorLoop中添加了一个vector，用来接收其他线程推送的task，在ReactorLoop线程从epoll_wait返回处理完活跃连接后，处理vector中存储的task事件，在这些task事件中添加或者删除关注的fd。</p>
 <p>这样做是线程安全了，但是vector需要靠mutex保护，锁的竞争可能会影响性能，后面需要想想解决的方案。</p>
-<h5 id="Buffer"><a href="#Buffer" class="headerlink" title="Buffer"></a>Buffer</h5><p>实现中Buffer类也是中途决定添加的，看来还是经验不足啊。对于非阻塞IO，MiniRpc必须提供Buffer来缓存message，这样才能做到异步调用。在实现上，Buffer类就是简单的包裹了vector并提供了需要的接口供其他类调用，vector数据连续，如果更加在乎性能的话，可以仿照libevent或者STL中的deque的设计，将buffer设计成即是链表有是连续的存储，提高性能。</p>
-<h5 id="非阻塞的connect"><a href="#非阻塞的connect" class="headerlink" title="非阻塞的connect"></a>非阻塞的connect</h5><p>Reactor模式要求在处理io操作的时候耗时尽可能的少，如果connect还是像传统那样阻塞住的话，则至少需要一个RTT的时间。所以需要换成非阻塞的connect，用select看是否可读可写，最后用getsocketop看是否连接出错，通过以上判断后才是成功连接。</p>
-<h5 id="资源所有权"><a href="#资源所有权" class="headerlink" title="资源所有权"></a>资源所有权</h5><p>下一篇也会提到这个，因为实在太重要了，在这上面吃了不少的亏。</p>
+<h4 id="Buffer"><a href="#Buffer" class="headerlink" title="Buffer"></a>Buffer</h4><p>实现中Buffer类也是中途决定添加的，看来还是经验不足啊。对于非阻塞IO，MiniRpc必须提供Buffer来缓存message，这样才能做到异步调用。在实现上，Buffer类就是简单的包裹了vector并提供了需要的接口供其他类调用，vector数据连续，如果更加在乎性能的话，可以仿照libevent或者STL中的deque的设计，将buffer设计成即是链表有是连续的存储，提高性能。</p>
+<h4 id="非阻塞的connect"><a href="#非阻塞的connect" class="headerlink" title="非阻塞的connect"></a>非阻塞的connect</h4><p>Reactor模式要求在处理io操作的时候耗时尽可能的少，如果connect还是像传统那样阻塞住的话，则至少需要一个RTT的时间。所以需要换成非阻塞的connect，用select看是否可读可写，最后用getsocketop看是否连接出错，通过以上判断后才是成功连接。</p>
+<h4 id="资源所有权"><a href="#资源所有权" class="headerlink" title="资源所有权"></a>资源所有权</h4><p>下一篇也会提到这个，因为实在太重要了，在这上面吃了不少的亏。</p>
 <p>在一开始划分模块设计类的时候并没有考虑类的所有权关系，导致测试的后core dump不断，valgrind也检测出不少的内存的泄露错误。后来的解决办法就是尽可能的将new/delete替换成shared_ptr，这样做后内存泄露是没了，却又引发了其他的问题，具体问题下一篇在来介绍吧。</p>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>一开始是没有网络连接层的设计，准备直接用libevent的，但是看完了它的大体框架后动了自己写一个的心思。现在看来，基本满足了后面rpc对网络连接层的需要，但肯定还是有很多不足，还需要多多完善。</p>
 
@@ -1156,7 +1156,7 @@
 <p>用同步的方式来写程序只要一个函数就好，可是被阻塞又不能充分的发挥我们CPU的效能，异步回调的方式固然能处理更多的连接，但是代码写起来又太过复杂，那么有么有什么方法能结合这两者的优点呢？好了，coroutine呼之欲出了。</p>
 <h2 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h2><p>提到python就不能不提协程，不是因为这是它首创的，而是在解释器全局锁的大背景下，多线程的能力被大大削弱，使用协程来在单线程中处理并发成了不得已而为之而又非常漂亮的手段（这里一定要提一下，并不是说单线程异步就一定要比多线程的效果好，单线程异步只是在有大量的非活跃连接的时候，会有更优的性能）。</p>
 <p>如何在代码中使用协程呢？python 3.4将asyncio引进的标准库，3.5更是专门增加了两个关键字async和await来处理协程，现在，在代码中使用协程已经非常方便了。<br>协程的概念大家都知道，背后的原理本质上就是在用户态来实现处理块的调度，减少内核态线程调度的开销。它的出现就是为了解决前面提到了spaghetti code的问题，使用协程来写代码，抛开前面提到了两个关键字，几乎就和同步阻塞的写法一模一样了。在有阻塞的地方，我们只要用async 将函数包裹起来，然后在主函数中使用await关键字来调用我们的异步函数，就可以了。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://en.wikipedia.org/wiki/C10k_problem" target="_blank" rel="external">C10k_Problem_Wiki</a><br><a href="https://github.com/ideawu/icomet" target="_blank" rel="external">ideau</a><br><a href="http://www.kegel.com/c10k.html" target="_blank" rel="external">C10K</a></p>
 
           
         
@@ -1432,7 +1432,7 @@
 <h3 id="用C-来重构一下"><a href="#用C-来重构一下" class="headerlink" title="用C++来重构一下"></a>用C++来重构一下</h3><p>基本的原理同用C语言来实现是一样的，可是C++提供了更加丰富的语言特性，比如RAII。在用C语言实现的版本中，我们要记得在获取锁之后释放锁，不然就会造成一直占用锁，其他线程没有办法执行。</p>
 <p>但是，在C++中，我们可以用类包装锁资源，在类对象初始化的时候获取锁，在类对象析构的释放锁，将程序员的任务交给语言去完成，极大的减轻了程序员的负担和出错误的可能性。而且，使用类可以有更好的封装性。</p>
 <p>基本的实现就不多说了，提一下使用的类。可以将之前使用的互斥锁和条件变量包装成类。同时将前面的任务和线程池也该用类来实现。</p>
-<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://zh.wikipedia.org/wiki/HTTP%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5" target="_blank" rel="external">HTTP 1.1 keepalive</a><br><a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B%E6%B1%A0" target="_blank" rel="external">线程池 Wiki</a><br><a href="http://tutorials.jenkov.com/java-concurrency/thread-pools.html" target="_blank" rel="external">Thread Pools</a></p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://zh.wikipedia.org/wiki/HTTP%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5" target="_blank" rel="external">HTTP 1.1 keepalive</a><br><a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B%E6%B1%A0" target="_blank" rel="external">线程池 Wiki</a><br><a href="http://tutorials.jenkov.com/java-concurrency/thread-pools.html" target="_blank" rel="external">Thread Pools</a></p>
 
           
         
