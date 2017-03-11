@@ -87,22 +87,22 @@
 
 
 
-<meta name="description" content="到这里，Minirpc一开始设计的基本功能都差不多完成了，但是还是有很多可以改善的地方。
-回顾写的整个过程，从一开始思路不清晰，到后面一点点的完善，还是学到了不少的东西的。 
-后面还会抽时间继续完善，现在想到的几个需要完善的地方，比如添加长连接的支持，再比如现在的测试代码不全，没有覆盖所有的可能(这是遗留下来的问题，一开始就没有怎么写测试)。到最后面，如果可以的话，想添加上服务注册发现节点，这需要">
+<meta name="description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+
+ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
 <meta property="og:type" content="article">
-<meta property="og:title" content="MiniRpc 小结">
-<meta property="og:url" content="http://yoursite.com/2017/03/02/MiniRpc4/index.html">
+<meta property="og:title" content="PyKV小记(未完待续)">
+<meta property="og:url" content="http://yoursite.com/2016/12/10/PyKV小记/index.html">
 <meta property="og:site_name" content="A little thought">
-<meta property="og:description" content="到这里，Minirpc一开始设计的基本功能都差不多完成了，但是还是有很多可以改善的地方。
-回顾写的整个过程，从一开始思路不清晰，到后面一点点的完善，还是学到了不少的东西的。 
-后面还会抽时间继续完善，现在想到的几个需要完善的地方，比如添加长连接的支持，再比如现在的测试代码不全，没有覆盖所有的可能(这是遗留下来的问题，一开始就没有怎么写测试)。到最后面，如果可以的话，想添加上服务注册发现节点，这需要">
-<meta property="og:updated_time" content="2017-03-07T14:02:23.146Z">
+<meta property="og:description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+
+ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
+<meta property="og:updated_time" content="2017-03-11T08:12:16.626Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="MiniRpc 小结">
-<meta name="twitter:description" content="到这里，Minirpc一开始设计的基本功能都差不多完成了，但是还是有很多可以改善的地方。
-回顾写的整个过程，从一开始思路不清晰，到后面一点点的完善，还是学到了不少的东西的。 
-后面还会抽时间继续完善，现在想到的几个需要完善的地方，比如添加长连接的支持，再比如现在的测试代码不全，没有覆盖所有的可能(这是遗留下来的问题，一开始就没有怎么写测试)。到最后面，如果可以的话，想添加上服务注册发现节点，这需要">
+<meta name="twitter:title" content="PyKV小记(未完待续)">
+<meta name="twitter:description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+
+ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
 
 
 
@@ -130,13 +130,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/03/02/MiniRpc4/"/>
+  <link rel="canonical" href="http://yoursite.com/2016/12/10/PyKV小记/"/>
 
 
 
 
 
-  <title> MiniRpc 小结 | A little thought </title>
+  <title> PyKV小记(未完待续) | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -245,7 +245,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/02/MiniRpc4/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/10/PyKV小记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -266,7 +266,7 @@
             
             
               
-                MiniRpc 小结
+                PyKV小记(未完待续)
               
             
           </h1>
@@ -281,8 +281,8 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-02T10:36:21+08:00">
-                2017-03-02
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-10T10:36:21+08:00">
+                2016-12-10
               </time>
             
 
@@ -317,9 +317,27 @@
       
 
       
-        <p>到这里，Minirpc一开始设计的基本功能都差不多完成了，但是还是有很多可以改善的地方。</p>
-<p>回顾写的整个过程，从一开始思路不清晰，到后面一点点的完善，还是学到了不少的东西的。 </p>
-<p>后面还会抽时间继续完善，现在想到的几个需要完善的地方，比如添加长连接的支持，再比如现在的测试代码不全，没有覆盖所有的可能(这是遗留下来的问题，一开始就没有怎么写测试)。<br>到最后面，如果可以的话，想添加上服务注册发现节点，这需要实现分布式一致性协议，这个完成难度比较大，但是可以试一试。</p>
+        <blockquote>
+<p>PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在<a href="https://github.com/xiongfengOrz/PyKV" target="_blank" rel="external">这里</a>。</p>
+</blockquote>
+<h3 id="ZMQ"><a href="#ZMQ" class="headerlink" title="ZMQ"></a>ZMQ</h3><p>  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在传统socket上加了魔改效果有多种常用工作模式的套接字。</p>
+<p>  相对于原生的socket，zeroMq有以下几个特点：</p>
+<pre><code>- 使用简单。
+- 支持多种通信模式，比如在本项目中使用的请求响应模式，此外还有在分布式系统中常用的发布/订阅模式。
+- 高性能。zeroMq和其他消息队列的性能对比见[这里](http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html)。
+</code></pre><p>  想了解更多关于zeroMq的可以看它的官网，见<a href="http://zeromq.org/" target="_blank" rel="external">这里</a>。</p>
+<h3 id="使用实例"><a href="#使用实例" class="headerlink" title="使用实例"></a>使用实例</h3><p>  在客户端建立同server的链接，数据库名称db，建立三个空的query<br>   <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">client = client_factory(<span class="string">"db"</span>)</div><div class="line">quer1 = Query()</div><div class="line">quer2 = Query()</div><div class="line">quer3 = Query()</div></pre></td></tr></table></figure></p>
+<p> 查询<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.search(quer1.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
+<p>删除<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">client.remove(quer2.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
+<p>插入<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.insert([&#123;<span class="string">"name"</span>:<span class="string">"he"</span>&#125;])</div></pre></td></tr></table></figure></p>
+<p>更新<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.update(<span class="string">"delete"</span>, quer3.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
+<p>更多的使用实例后面会更新。</p>
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>其实实现反而没有什么好说的，跟一开始设想的仿照redis来实现的目标差的有点远。而且也是通过python的getattr自省和重载操作符来实现的条件的解析，算是取巧避开了实现类似于SQL的解析部分，这样大大减轻的程序的包袱。</p>
+<p>存储上一开始准备直接存在内存中，后面又在纠结是不是应该改成json好支持持久化，最后干脆两个都支持，将选择权留给配置，这样实现起来也很方便。</p>
+<p>没有做性能上的测试，主要还是不是很满意，后面应该会有大的改版，完成之后在做性能测试吧。</p>
+<p>既然还要修改的话，就把这篇的名字改成未完待续吧。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://zeromq.org/" target="_blank" rel="external">ZMQ官网</a></p>
+<p>[ZMQ性能测试](<a href="http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html" target="_blank" rel="external">http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html</a></p>
 
       
     </div>
@@ -350,8 +368,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/02/25/MiniRpc2/" rel="next" title="MiniRpc 实现Rpc">
-                <i class="fa fa-chevron-left"></i> MiniRpc 实现Rpc
+              <a href="/2016/11/05/无锁编程之替换读写锁/" rel="next" title="用无锁编程来替换读写锁">
+                <i class="fa fa-chevron-left"></i> 用无锁编程来替换读写锁
               </a>
             
           </div>
@@ -359,6 +377,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/01/13/MiniRpc1/" rel="prev" title="MiniRpc 开篇">
+                MiniRpc 开篇 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -405,8 +427,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.gif"
@@ -450,6 +481,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ZMQ"><span class="nav-number">1.</span> <span class="nav-text">ZMQ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用实例"><span class="nav-number">2.</span> <span class="nav-text">使用实例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

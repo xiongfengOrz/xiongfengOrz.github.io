@@ -770,6 +770,144 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/10/PyKV小记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/12/10/PyKV小记/" itemprop="url">
+                  PyKV小记(未完待续)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-10T10:36:21+08:00">
+                2016-12-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在<a href="https://github.com/xiongfengOrz/PyKV" target="_blank" rel="external">这里</a>。</p>
+</blockquote>
+<h3 id="ZMQ"><a href="#ZMQ" class="headerlink" title="ZMQ"></a>ZMQ</h3><p>  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在传统socket上加了魔改效果有多种常用工作模式的套接字。</p>
+<p>  相对于原生的socket，zeroMq有以下几个特点：</p>
+<pre><code>- 使用简单。
+- 支持多种通信模式，比如在本项目中使用的请求响应模式，此外还有在分布式系统中常用的发布/订阅模式。
+- 高性能。zeroMq和其他消息队列的性能对比见[这里](http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html)。
+</code></pre><p>  想了解更多关于zeroMq的可以看它的官网，见<a href="http://zeromq.org/" target="_blank" rel="external">这里</a>。</p>
+<h3 id="使用实例"><a href="#使用实例" class="headerlink" title="使用实例"></a>使用实例</h3><p>  在客户端建立同server的链接，数据库名称db，建立三个空的query<br>   <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">client = client_factory(<span class="string">"db"</span>)</div><div class="line">quer1 = Query()</div><div class="line">quer2 = Query()</div><div class="line">quer3 = Query()</div></pre></td></tr></table></figure></p>
+<p> 查询<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.search(quer1.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
+<p>删除<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">client.remove(quer2.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
+<p>插入<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.insert([&#123;<span class="string">"name"</span>:<span class="string">"he"</span>&#125;])</div></pre></td></tr></table></figure></p>
+<p>更新<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.update(<span class="string">"delete"</span>, quer3.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
+<p>更多的使用实例后面会更新。</p>
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>其实实现反而没有什么好说的，跟一开始设想的仿照redis来实现的目标差的有点远。而且也是通过python的getattr自省和重载操作符来实现的条件的解析，算是取巧避开了实现类似于SQL的解析部分，这样大大减轻的程序的包袱。</p>
+<p>存储上一开始准备直接存在内存中，后面又在纠结是不是应该改成json好支持持久化，最后干脆两个都支持，将选择权留给配置，这样实现起来也很方便。</p>
+<p>没有做性能上的测试，主要还是不是很满意，后面应该会有大的改版，完成之后在做性能测试吧。</p>
+<p>既然还要修改的话，就把这篇的名字改成未完待续吧。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://zeromq.org/" target="_blank" rel="external">ZMQ官网</a></p>
+<p>[ZMQ性能测试](<a href="http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html" target="_blank" rel="external">http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/11/05/无锁编程之替换读写锁/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1464,132 +1602,13 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/06/20/about/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="xiong feng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="A little thought">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/06/20/about/" itemprop="url">
-                  我为什么又开始写博客
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Veröffentlicht am</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-06-20T10:36:21+08:00">
-                2016-06-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>这是新博客的第一篇，做个纪念。</p>
-<h2 id="为什么以前没有写下去"><a href="#为什么以前没有写下去" class="headerlink" title="为什么以前没有写下去"></a>为什么以前没有写下去</h2><p>之所以叫又开始写博客，是因为很久之前在csdn写过一段时间的博客，但是没有坚持下去。原因有很多方面，最主要的是觉得自己还是太弱，写下去没有干货。</p>
-<p>还有一点是觉得当时写出来的只是一些知识点的堆砌，没有自己的思考，认识，归纳，这样的文章不像是博客，到更像是笔记，如果写出来的只是笔记，那干脆就写在Evernote里好了。</p>
-<p>所以，现在我在Evernote里记录了很多，但是却没有输出一篇博客。</p>
-<h2 id="为什么又开始写了"><a href="#为什么又开始写了" class="headerlink" title="为什么又开始写了"></a>为什么又开始写了</h2><p>读了这一篇文章<a href="http://mindhacks.cn/2009/02/15/why-you-should-start-blogging-now/" target="_blank" rel="external">为什么你应该（从现在开始就）写博客</a>，学到了很多，其中最认同的是在书写的过程中也会发现自己很多没有弄懂的地方，所以我会时不时的把Evernote里的笔记整理一下，写一写博客。</p>
-<p>希望这次能坚持下去。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
 
           
           </div>
@@ -1632,7 +1651,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-count">11</span>
                 <span class="site-state-item-name">Artikel</span>
               </a>
             </div>
