@@ -87,22 +87,22 @@
 
 
 
-<meta name="description" content="这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。
+<meta name="description" content="这篇文章根据16年读bitcoin的论文写的笔记扩展而来的。
 
-  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，">
+  最近读了这篇关于bitcoin的论文，觉得很有意思。记得还是读大学的时候，有一段时间新闻里比特币炒的特别火热，身边也有同学认识的人很早之前买的比特币小赚了一笔，网上到处都是挖矿的帖子。那时是第一次听说比特币的概念，一直不是很能理解脱离了国家政府发行的货币有什么意义？数字货币又是怎样防止造假的？这背后的技术除了比特币以外还有别的用">
 <meta property="og:type" content="article">
-<meta property="og:title" content="MiniRpc 开篇">
-<meta property="og:url" content="http://yoursite.com/2017/01/13/MiniRpc1/index.html">
+<meta property="og:title" content="比特币和区块链">
+<meta property="og:url" content="http://yoursite.com/2016/12/25/比特币和区块链/index.html">
 <meta property="og:site_name" content="A little thought">
-<meta property="og:description" content="这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。
+<meta property="og:description" content="这篇文章根据16年读bitcoin的论文写的笔记扩展而来的。
 
-  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，">
-<meta property="og:updated_time" content="2017-03-07T13:47:24.416Z">
+  最近读了这篇关于bitcoin的论文，觉得很有意思。记得还是读大学的时候，有一段时间新闻里比特币炒的特别火热，身边也有同学认识的人很早之前买的比特币小赚了一笔，网上到处都是挖矿的帖子。那时是第一次听说比特币的概念，一直不是很能理解脱离了国家政府发行的货币有什么意义？数字货币又是怎样防止造假的？这背后的技术除了比特币以外还有别的用">
+<meta property="og:updated_time" content="2017-03-12T13:16:57.089Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="MiniRpc 开篇">
-<meta name="twitter:description" content="这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。
+<meta name="twitter:title" content="比特币和区块链">
+<meta name="twitter:description" content="这篇文章根据16年读bitcoin的论文写的笔记扩展而来的。
 
-  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，">
+  最近读了这篇关于bitcoin的论文，觉得很有意思。记得还是读大学的时候，有一段时间新闻里比特币炒的特别火热，身边也有同学认识的人很早之前买的比特币小赚了一笔，网上到处都是挖矿的帖子。那时是第一次听说比特币的概念，一直不是很能理解脱离了国家政府发行的货币有什么意义？数字货币又是怎样防止造假的？这背后的技术除了比特币以外还有别的用">
 
 
 
@@ -130,13 +130,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/01/13/MiniRpc1/"/>
+  <link rel="canonical" href="http://yoursite.com/2016/12/25/比特币和区块链/"/>
 
 
 
 
 
-  <title> MiniRpc 开篇 | A little thought </title>
+  <title> 比特币和区块链 | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -245,7 +245,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/13/MiniRpc1/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/25/比特币和区块链/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -266,7 +266,7 @@
             
             
               
-                MiniRpc 开篇
+                比特币和区块链
               
             
           </h1>
@@ -281,8 +281,8 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-13T10:36:21+08:00">
-                2017-01-13
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-25T10:36:21+08:00">
+                2016-12-25
               </time>
             
 
@@ -318,41 +318,16 @@
 
       
         <blockquote>
-<p>这篇文章根据16年暑假准备开始写Rpc库之前写的笔记整理的。</p>
+<p>这篇文章根据16年读bitcoin的论文写的笔记扩展而来的。</p>
 </blockquote>
-<p>  Rpc即远程服务调用，使用非常广泛，也有很多的开源实现，比如google的gRpc、微信的phxrpc,阿里的Dubbo。之所以重新造轮子开始纯粹是为了练手。到现在为止一开始设想的基本功能差不多都已经实现了，翻了翻EverNote，发现在编码测试重构的过程中还是遇到了不少问题，有设计上一开始没有考虑清楚的，有编码上的低级bug，还有一些调试上的，所以就想着从EverNote中整理出几篇博客记录一下。</p>
-<p>  这是第一篇，先介绍下如果要写一个自己的Rpc库所先需要基本概念。</p>
-<h3 id="消息模式："><a href="#消息模式：" class="headerlink" title="消息模式："></a>消息模式：</h3><p>  一个Rpc系统中最重要的就是消息模式，消息模式定义了对传输消息的保证，常见的模式有：</p>
-<ul>
-<li>at least once ：指消息至少发送一次，可能超过一次</li>
-<li>at most once ：指消息最多发送一次，可能不发送</li>
-</ul>
-<p>  在实现中如何区分两者呢？很好理解，就是Rpc系统是否有持久化和重传功能，如果消息在指定时间内没有相应，就会触发重传，这就实现了at least once 。如果没有重传，就是at most once。</p>
-<p>  在我的实现中并不是at most once但也不是严格意义上的at least once。MiniRpc带有超时重传功能，但是没有对消息进行持久化，如果内存耗尽或者进程崩溃就会造成消息的丢失。这有点类似于ZeroMq。</p>
-<p>  另外多说一句，现实系统中由于网络并非百分百可靠，所以并不存在just once的模式。</p>
-<h3 id="调用模型："><a href="#调用模型：" class="headerlink" title="调用模型："></a>调用模型：</h3><p>  前面的模式针对的消息的传输次数，那这里的调用模型针对的是调用方，分为同步和异步模型。</p>
-<ul>
-<li>同步模型 ：指Client端阻塞在Rpc调用处，一直等到结果返回或者调用超时</li>
-<li>异步模型 ：指Client端不用等待结果返回</li>
-</ul>
-<p>  MiniRpc同时支持上面两种模型。同步模型很好实现，直接阻塞即可，为了实现异步模型，我们需要注册回调函数供返回消息时调用。</p>
-<h3 id="调用基本流程："><a href="#调用基本流程：" class="headerlink" title="调用基本流程："></a>调用基本流程：</h3><p>  我第一次接触到Rpc时觉得有点神奇，因为一台机器居然可以调用另外一台机器上的函数，其实稍微一想就会明白这就是一个加了Buff的网络库。</p>
-<p>  为了使用Rpc，需要在Client端和Server端各添加一个stub。</p>
-<p>  Client端的stub负责将方法、参数等组装成能够进行网络传输的消息体，同时找到服务地址，发送消息。</p>
-<p>  Server端的stub接收到消息后，根据提取出的信息，调用对应的函数，将结果打包发送给Client端。</p>
-<p>  所有这一切都对用户透明，所以在用户看来仅仅是调用一个函数，并不关心函数是在哪台机器上运行，只用等待结果即可，不用纠缠于细节，Rpc可以极大的减轻用户的负担。</p>
-<h3 id="网络模型"><a href="#网络模型" class="headerlink" title="网络模型"></a>网络模型</h3><p>  知道了一次Rpc调用的基本流程，我们就知道所有的Rpc都是要经过网络的，选择恰当的网络模型对于实现Rpc是至关重要的。</p>
-<p>  MiniRpc使用的是Reactor模型，基于linux提供的高效的epoll系统调用，同时加入了多线程模型，来应对耗时长的调用。</p>
-<p>  实现中网络层这一块的细节我会放在第二篇来讲解。</p>
-<h3 id="消息格式"><a href="#消息格式" class="headerlink" title="消息格式"></a>消息格式</h3><p>  确定了网络模型后，我们就可以在Client和Server直接收发消息了，那么接下来就是顺理成章的要确定收发的消息格式了。</p>
-<p>  消息一般分两种，request和reply，分别是Client到Server和Server回到Client。</p>
-<p>  Request：按照最直观的理解，我们需要在消息头添加上函数名和对应的参数，只有知道了名称server端才知道该调用那个函数。<br>  其他还需要调用的超时时间，如果在这个时间内没有消息返回的话就会放弃本次调用，将超时异常返回给Client端。如果是异步调用还需要添加requestId，才能识别不同的异步调用。</p>
-<p>  Reply：包含返回值和已经函数调用的状态，同时还要包含RequestId。</p>
-<h3 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h3><p>  序列化是可选的，一般选择序列化都是为了方便网络传输，如果不在乎消息的大小，直接使用JSON传输也是可以的。</p>
-<p>  MiniRpc选用了ProtoBuf来实现序列化，能尽量减小消息的格式，缺点是二进制协议不具备可读性。</p>
-<h3 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h3><p>  除了原始的通过ip和port提供服务以外，最好我们能将服务发现的过程自动化。</p>
-<p>  Server端将提供的服务提交给服务提供节点，Client端每次调用服务的时候从服务提供节点获取对应服务的server的ip和端口，再去连接server。</p>
-<p>  这就要求服务提供节点具有极高的容错性，避免出现单点故障，所以一般使用Zookeeper或者其他实现了类paxos协议的机器群。</p>
+<p>  最近读了这篇<a href="http://nil.csail.mit.edu/6.824/2016/papers/bitcoin.pdf" target="_blank" rel="external">关于bitcoin的论文</a>，觉得很有意思。记得还是读大学的时候，有一段时间新闻里比特币炒的特别火热，身边也有同学认识的人很早之前买的比特币小赚了一笔，网上到处都是挖矿的帖子。那时是第一次听说比特币的概念，一直不是很能理解脱离了国家政府发行的货币有什么意义？数字货币又是怎样防止造假的？这背后的技术除了比特币以外还有别的用处吗？</p>
+<p>  直到读了这篇论文，我大概弄懂了bitcoin的基本流程，这里我想要尝试着回答一下上面的几个问题，如有谬误，欢迎指出。</p>
+<h3 id="什么是比特币"><a href="#什么是比特币" class="headerlink" title="什么是比特币"></a>什么是比特币</h3><p>  认识一个新的事物，先了解一下它的定义。参考wiki，bitcoin是一种全球通用的加密互联网货币，它的主要特点是采用点对点网络开发的区块链技术，实现了去中心化的数字安全货币。</p>
+<p>  好了，定义就以上这些，如果看这有点头晕没有关系，这是正常的，现在你只用知道每个比特币使用者都有一个数字账户，账户里存放着比特币，比特币是一种去中心化的数字货币，它最主要的用途就是在网上交易。下面我们就来一一了解它会遇到什么问题，又是怎样解决的。</p>
+<h3 id="比特币会遇到哪些问题"><a href="#比特币会遇到哪些问题" class="headerlink" title="比特币会遇到哪些问题"></a>比特币会遇到哪些问题</h3><p>  作为一种货币，虽然是数字没有实体的，它依然会遇到其他货币遇到的问题，比如如何防止被伪造？如何判断重复使用？如何防止别人偷窃你的金钱？</p>
+<p>  让我一一来看比特币对上面问题的解决方法。</p>
+<h4 id="如何防止被伪造以及如何防止偷窃？"><a href="#如何防止被伪造以及如何防止偷窃？" class="headerlink" title="如何防止被伪造以及如何防止偷窃？"></a>如何防止被伪造以及如何防止偷窃？</h4><h3 id="hazard-pointer"><a href="#hazard-pointer" class="headerlink" title="hazard_pointer"></a>hazard_pointer</h3><h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://nil.csail.mit.edu/6.824/2016/papers/bitcoin.pdf" target="_blank" rel="external">Bitcoin 论文</a></p>
+<p><a href="http://www.michaelnielsen.org/ddi/how-the-bitcoin-protocol-actually-works/" target="_blank" rel="external">How the Bitcoin protocol actually works</a></p>
 
       
     </div>
@@ -383,8 +358,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/12/25/比特币和区块链/" rel="next" title="比特币和区块链">
-                <i class="fa fa-chevron-left"></i> 比特币和区块链
+              <a href="/2016/12/10/PyKV小记/" rel="next" title="PyKV小记(未完待续)">
+                <i class="fa fa-chevron-left"></i> PyKV小记(未完待续)
               </a>
             
           </div>
@@ -393,8 +368,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/02/10/MiniRpc3/" rel="prev" title="MiniRpc 连接层">
-                MiniRpc 连接层 <i class="fa fa-chevron-right"></i>
+              <a href="/2017/01/13/MiniRpc1/" rel="prev" title="MiniRpc 开篇">
+                MiniRpc 开篇 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -506,7 +481,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#消息模式："><span class="nav-number">1.</span> <span class="nav-text">消息模式：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用模型："><span class="nav-number">2.</span> <span class="nav-text">调用模型：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用基本流程："><span class="nav-number">3.</span> <span class="nav-text">调用基本流程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络模型"><span class="nav-number">4.</span> <span class="nav-text">网络模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息格式"><span class="nav-number">5.</span> <span class="nav-text">消息格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#序列化"><span class="nav-number">6.</span> <span class="nav-text">序列化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务发现"><span class="nav-number">7.</span> <span class="nav-text">服务发现</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是比特币"><span class="nav-number">1.</span> <span class="nav-text">什么是比特币</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#比特币会遇到哪些问题"><span class="nav-number">2.</span> <span class="nav-text">比特币会遇到哪些问题</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#如何防止被伪造以及如何防止偷窃？"><span class="nav-number">2.1.</span> <span class="nav-text">如何防止被伪造以及如何防止偷窃？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hazard-pointer"><span class="nav-number">3.</span> <span class="nav-text">hazard_pointer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
             
 
           </div>
