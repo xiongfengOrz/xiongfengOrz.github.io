@@ -857,7 +857,11 @@
 <p>  好了，定义就以上这些，如果看这有点头晕没有关系，这是正常的，现在你只用知道每个比特币使用者都有一个数字账户，账户里存放着比特币，比特币是一种去中心化的数字货币，它最主要的用途就是在网上交易。下面我们就来一一了解它会遇到什么问题，又是怎样解决的。</p>
 <h3 id="比特币会遇到哪些问题"><a href="#比特币会遇到哪些问题" class="headerlink" title="比特币会遇到哪些问题"></a>比特币会遇到哪些问题</h3><p>  作为一种货币，虽然是数字没有实体的，它依然会遇到其他货币遇到的问题，比如如何防止被伪造？如何判断重复使用？如何防止别人偷窃你的金钱？</p>
 <p>  让我一一来看比特币对上面问题的解决方法。</p>
-<h4 id="如何防止被伪造以及如何防止偷窃？"><a href="#如何防止被伪造以及如何防止偷窃？" class="headerlink" title="如何防止被伪造以及如何防止偷窃？"></a>如何防止被伪造以及如何防止偷窃？</h4><h3 id="hazard-pointer"><a href="#hazard-pointer" class="headerlink" title="hazard_pointer"></a>hazard_pointer</h3><h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://nil.csail.mit.edu/6.824/2016/papers/bitcoin.pdf" target="_blank" rel="external">Bitcoin 论文</a></p>
+<h4 id="如何防止偷窃？"><a href="#如何防止偷窃？" class="headerlink" title="如何防止偷窃？"></a>如何防止偷窃？</h4><p>  这个问题比较好解决，只要用到密码学中的非对称加密的概念。每个用户接受比特币的地址由用户的公钥哈希得来，而私钥只有用户自己持有，在每一笔用户的交易上，用户都要用自己的私钥签名，这就是数据签名。收到钱的其他用户可以用公钥验证数字签名是否正确，这样就可以防止别人伪装成自己跟其他人交易了。这样做的缺点就是，一旦私钥被他人获取，就想到于你自己的钱包丢了，里面的钱都被人偷窃走啦。</p>
+<h4 id="如何防止被伪造？"><a href="#如何防止被伪造？" class="headerlink" title="如何防止被伪造？"></a>如何防止被伪造？</h4><p>  那么假设我就是我自己，不是别人伪装的，但是我自己的钱包里没有钱，我想伟钊出一些钱来使用，比如我没有钱但却给张三发出了转账100元的信息，张三如何判断我到底到底有没有这100元呢？</p>
+<p>  想想现实生活中我们使用的人民币是怎样解决这个问题的？没错，就是给没张钱一个独一无二的序列号。仿照着，我们的比特币也可以这样做，通过一个中心化的类似于银行的节点，为每个比特币发放一个唯一的序列号，用户收到别人的转账后可以这个中心节点查询这次转账的钱是否有效，用户可以向中心节点确认两个信息，一是这个序列号对应的钱是否属于转账者，二是他是否还没有把这张钱花掉。如果这两点都是真的，那么用户就可以确认接受这次转账。</p>
+<h4 id="如何防止使用两次-double-send-？"><a href="#如何防止使用两次-double-send-？" class="headerlink" title="如何防止使用两次(double send)？"></a>如何防止使用两次(double send)？</h4><p>  这个才是比特币要解决的问题的大头。</p>
+<h3 id="hazard-pointer"><a href="#hazard-pointer" class="headerlink" title="hazard_pointer"></a>hazard_pointer</h3><h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://nil.csail.mit.edu/6.824/2016/papers/bitcoin.pdf" target="_blank" rel="external">Bitcoin 论文</a></p>
 <p><a href="http://www.michaelnielsen.org/ddi/how-the-bitcoin-protocol-actually-works/" target="_blank" rel="external">How the Bitcoin protocol actually works</a></p>
 
           
