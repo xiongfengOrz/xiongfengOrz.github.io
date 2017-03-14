@@ -237,6 +237,146 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/22/ftp server设计/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/07/22/ftp server设计/" itemprop="url">
+                  准备实现一个FTP Server
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-07-22T10:36:21+08:00">
+                2016-07-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>这篇文章根据16年准备实现一个FTP Server写的笔记修改而来的，很惭愧，最后只做了个demo后来一直没有完成。</p>
+</blockquote>
+<p>  如果你搜实现一个简易的ftp server，会得到一大把的结果，数量应该不亚于实现一个简易的HTTP server。如果抛开那些实现，我们如果要完成一个ftp server所需要考虑的技术点有那些呢？这里我试着列出一些我认为需要考虑的技术点。</p>
+<h3 id="文件读写方式"><a href="#文件读写方式" class="headerlink" title="文件读写方式"></a>文件读写方式</h3><p>  ftp 传输文件，就需要选择一个读写文件的api，write or mmap or others? </p>
+<p>  感觉上mmap实现内存映射少了从内核缓存拷贝到用户缓存这一个过程，效率应该会更高，但是没有考虑到的是mmap只是建立了一个虚拟空间到物理文件的映射，如果访问文件就会产生缺页中断，这就导致mmap的中断/字节的比例太高，影响性能。补充：中断太多的问题是否可以用madvise解决。</p>
+<p>  而对于read/write，linux文件系统有预读的机制，而我们一般是传输整个文件，这就需要我们顺序读取，这一点比较适合read/write的场景。</p>
+<p>  另外还可以考虑异步io-AIO机制。分为usespace和kernel实现两种。usespace的实现就是简单的开多线程而已，倒是kernel aio看上去比较合适。但是查阅资料后发现，目前kernel aio还并不完善，有诸多限制比如不能带有内核buffer必须是以direct的方式读取硬盘上的文件，并且需要读写同硬盘的block大小对齐，需要自己建立一套缓存系统。</p>
+<p>  其实对于静态文件sendfile应该更加合适，可以直接将file发往socket，实现了零拷贝，但是很多时候我们都是要读文件然后做一定的处理再交给客户端，所以用处并不广泛。</p>
+<p>  上述都是一些理论上的分析，实际上需要对不同大小的文件选用不同的方式做性能测试对比。</p>
+<p>  补充：后来我在实验室的电脑上做了简单的测试，发现在顺序读写文件的情况下read的效率要好于mmap。</p>
+<h3 id="读写线程"><a href="#读写线程" class="headerlink" title="读写线程"></a>读写线程</h3><p>  是否使用多线程来读写硬盘文件？</p>
+<p>  这里就需要区分SSD和传统的机械硬盘。机械硬盘有寻道时间，但是ssd是不一样的，ssd是没有寻道时间的。</p>
+<p>  在机械盘的情况下，有时候比如需要同时并行的读写多个文件。多线程读写硬盘是否会带来寻道时间的增加，增加延时？另外如果使用多线程的话，要使用pread和pwrite。</p>
+<p>  同上，依旧需要进行对比测试。</p>
+<p>  补充：后来在电脑上做了简单的测试，发现多线程读比单线程读的速率要高，但是平均等待时延更大。简单的解释如下，应用层的io请求在内核态会加入到io请求队列里面。内核在处理io请求的时候，并不是简单的先到先处理，而是根据磁盘的特性，使用某种电梯算法，在处理完一个io请求后，会优先处理最临近的io请求。这样可以有效的减少磁盘的寻道时间，从而提升了系统整体的io处理速度。但对于每一个io请求来看，由于可能需要在队列里面等待，所以响应时间会有所提升。</p>
+<h3 id="UDP还是TCP"><a href="#UDP还是TCP" class="headerlink" title="UDP还是TCP"></a>UDP还是TCP</h3><p>  不要诧异，tcp不是唯一的选择。尽管看上去对于传文件要考虑流量控制，同时还要考虑重传，确认，超时，乱序都要有。在这些上，tcp都是现成的。而udp却全都要自己在应用层实现，会大大增加工作量。</p>
+<p>  但是tcp在设计的时候并不是以性能作为第一目标，其拥塞控制算法中的慢启动，拥塞避免等算法更多考虑的是网络的公平性。如果我们用udp重新实现，可以做到以性能为第一考虑的目标。</p>
+<p>  当然，上述性能问题可以用多条tcp链接分块传输来实现。同上，依旧只是理论分析，要靠实际来检验。</p>
+<h3 id="断点下载"><a href="#断点下载" class="headerlink" title="断点下载"></a>断点下载</h3><p>  基本上将文件分块，通过多线程多条链接下载，同时需要在客户端保存下载完成的进度。</p>
+<p>  由于客户端可能断点或者其他的原因奔溃，而下载内容缓存在内存中会丢失，可以考虑数据库事务的实现方式，通过WAL来确认接收到的文件的某一块是否已经完整的写入硬盘。</p>
+<h3 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h3><p>  安全这一块真的不怎么懂。直接贴当时我的记录吧。<br>  服务端加盐存储md5值，防止彩虹表爆破。<br>  同时还要防止重放攻击，增加一个token值?<br>  由于没有使用TLS，所以传输层不安全。加密密码的使用对称加密效率高，但是交换密码不方便，非对称加密解密效率较低。<br>  抽空看看密码学吧。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://lse.sourceforge.net/io/aio.html" target="_blank" rel="external">Linux kernel AIO</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/06/23/线程池/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -536,7 +676,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">Artikel</span>
               </a>
             </div>

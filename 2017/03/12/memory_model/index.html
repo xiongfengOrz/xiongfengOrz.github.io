@@ -87,25 +87,21 @@
 
 
 
-<meta name="description" content="这篇文章根据16年准备实现一个FTP Server写的笔记修改而来的，很惭愧，最后只做了个demo后来一直没有完成。
-
-  如果你搜实现一个简易的ftp server，会得到一大把的结果，数量应该不亚于实现一个简易的HTTP server。如果抛开那些实现，我们如果要完成一个ftp server所需要考虑的技术点有那些呢？这里我试着列出一些我认为需要考虑的技术点。
-文件读写方式  ftp 传输文">
+<meta name="description" content="Memory Model可以简单的理解为内存的可见性，在多线程程序中是一个非常重要的概念，这次想系统的总结一下相关的基础知识，算是做个记录。    
+背景  在并发编程中，一般有两种编程模型，一种是通过shared memory，一种是通过交换message。两种模型中语言的代表前者比如c++，后者比如go。在共享内存的模型中就有cpu与内存读写的动作，一般的情况是某一个线程往内存中的某个位置">
 <meta property="og:type" content="article">
-<meta property="og:title" content="准备实现一个FTP Server">
-<meta property="og:url" content="http://yoursite.com/2016/07/22/ftp server设计/index.html">
+<meta property="og:title" content="Memory Model">
+<meta property="og:url" content="http://yoursite.com/2017/03/12/memory_model/index.html">
 <meta property="og:site_name" content="A little thought">
-<meta property="og:description" content="这篇文章根据16年准备实现一个FTP Server写的笔记修改而来的，很惭愧，最后只做了个demo后来一直没有完成。
-
-  如果你搜实现一个简易的ftp server，会得到一大把的结果，数量应该不亚于实现一个简易的HTTP server。如果抛开那些实现，我们如果要完成一个ftp server所需要考虑的技术点有那些呢？这里我试着列出一些我认为需要考虑的技术点。
-文件读写方式  ftp 传输文">
-<meta property="og:updated_time" content="2017-03-07T13:22:10.963Z">
+<meta property="og:description" content="Memory Model可以简单的理解为内存的可见性，在多线程程序中是一个非常重要的概念，这次想系统的总结一下相关的基础知识，算是做个记录。    
+背景  在并发编程中，一般有两种编程模型，一种是通过shared memory，一种是通过交换message。两种模型中语言的代表前者比如c++，后者比如go。在共享内存的模型中就有cpu与内存读写的动作，一般的情况是某一个线程往内存中的某个位置">
+<meta property="og:image" content="http://yoursite.com/imag/barrier-types.png">
+<meta property="og:updated_time" content="2017-03-14T11:26:59.203Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="准备实现一个FTP Server">
-<meta name="twitter:description" content="这篇文章根据16年准备实现一个FTP Server写的笔记修改而来的，很惭愧，最后只做了个demo后来一直没有完成。
-
-  如果你搜实现一个简易的ftp server，会得到一大把的结果，数量应该不亚于实现一个简易的HTTP server。如果抛开那些实现，我们如果要完成一个ftp server所需要考虑的技术点有那些呢？这里我试着列出一些我认为需要考虑的技术点。
-文件读写方式  ftp 传输文">
+<meta name="twitter:title" content="Memory Model">
+<meta name="twitter:description" content="Memory Model可以简单的理解为内存的可见性，在多线程程序中是一个非常重要的概念，这次想系统的总结一下相关的基础知识，算是做个记录。    
+背景  在并发编程中，一般有两种编程模型，一种是通过shared memory，一种是通过交换message。两种模型中语言的代表前者比如c++，后者比如go。在共享内存的模型中就有cpu与内存读写的动作，一般的情况是某一个线程往内存中的某个位置">
+<meta name="twitter:image" content="http://yoursite.com/imag/barrier-types.png">
 
 
 
@@ -133,13 +129,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/07/22/ftp server设计/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/03/12/memory_model/"/>
 
 
 
 
 
-  <title> 准备实现一个FTP Server | A little thought </title>
+  <title> Memory Model | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -248,7 +244,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/22/ftp server设计/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/12/memory_model/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -269,7 +265,7 @@
             
             
               
-                准备实现一个FTP Server
+                Memory Model
               
             
           </h1>
@@ -284,8 +280,8 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-07-22T10:36:21+08:00">
-                2016-07-22
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-12T10:36:21+08:00">
+                2017-03-12
               </time>
             
 
@@ -320,29 +316,23 @@
       
 
       
-        <blockquote>
-<p>这篇文章根据16年准备实现一个FTP Server写的笔记修改而来的，很惭愧，最后只做了个demo后来一直没有完成。</p>
-</blockquote>
-<p>  如果你搜实现一个简易的ftp server，会得到一大把的结果，数量应该不亚于实现一个简易的HTTP server。如果抛开那些实现，我们如果要完成一个ftp server所需要考虑的技术点有那些呢？这里我试着列出一些我认为需要考虑的技术点。</p>
-<h3 id="文件读写方式"><a href="#文件读写方式" class="headerlink" title="文件读写方式"></a>文件读写方式</h3><p>  ftp 传输文件，就需要选择一个读写文件的api，write or mmap or others? </p>
-<p>  感觉上mmap实现内存映射少了从内核缓存拷贝到用户缓存这一个过程，效率应该会更高，但是没有考虑到的是mmap只是建立了一个虚拟空间到物理文件的映射，如果访问文件就会产生缺页中断，这就导致mmap的中断/字节的比例太高，影响性能。补充：中断太多的问题是否可以用madvise解决。</p>
-<p>  而对于read/write，linux文件系统有预读的机制，而我们一般是传输整个文件，这就需要我们顺序读取，这一点比较适合read/write的场景。</p>
-<p>  另外还可以考虑异步io-AIO机制。分为usespace和kernel实现两种。usespace的实现就是简单的开多线程而已，倒是kernel aio看上去比较合适。但是查阅资料后发现，目前kernel aio还并不完善，有诸多限制比如不能带有内核buffer必须是以direct的方式读取硬盘上的文件，并且需要读写同硬盘的block大小对齐，需要自己建立一套缓存系统。</p>
-<p>  其实对于静态文件sendfile应该更加合适，可以直接将file发往socket，实现了零拷贝，但是很多时候我们都是要读文件然后做一定的处理再交给客户端，所以用处并不广泛。</p>
-<p>  上述都是一些理论上的分析，实际上需要对不同大小的文件选用不同的方式做性能测试对比。</p>
-<p>  补充：后来我在实验室的电脑上做了简单的测试，发现在顺序读写文件的情况下read的效率要好于mmap。</p>
-<h3 id="读写线程"><a href="#读写线程" class="headerlink" title="读写线程"></a>读写线程</h3><p>  是否使用多线程来读写硬盘文件？</p>
-<p>  这里就需要区分SSD和传统的机械硬盘。机械硬盘有寻道时间，但是ssd是不一样的，ssd是没有寻道时间的。</p>
-<p>  在机械盘的情况下，有时候比如需要同时并行的读写多个文件。多线程读写硬盘是否会带来寻道时间的增加，增加延时？另外如果使用多线程的话，要使用pread和pwrite。</p>
-<p>  同上，依旧需要进行对比测试。</p>
-<p>  补充：后来在电脑上做了简单的测试，发现多线程读比单线程读的速率要高，但是平均等待时延更大。简单的解释如下，应用层的io请求在内核态会加入到io请求队列里面。内核在处理io请求的时候，并不是简单的先到先处理，而是根据磁盘的特性，使用某种电梯算法，在处理完一个io请求后，会优先处理最临近的io请求。这样可以有效的减少磁盘的寻道时间，从而提升了系统整体的io处理速度。但对于每一个io请求来看，由于可能需要在队列里面等待，所以响应时间会有所提升。</p>
-<h3 id="UDP还是TCP"><a href="#UDP还是TCP" class="headerlink" title="UDP还是TCP"></a>UDP还是TCP</h3><p>  不要诧异，tcp不是唯一的选择。尽管看上去对于传文件要考虑流量控制，同时还要考虑重传，确认，超时，乱序都要有。在这些上，tcp都是现成的。而udp却全都要自己在应用层实现，会大大增加工作量。</p>
-<p>  但是tcp在设计的时候并不是以性能作为第一目标，其拥塞控制算法中的慢启动，拥塞避免等算法更多考虑的是网络的公平性。如果我们用udp重新实现，可以做到以性能为第一考虑的目标。</p>
-<p>  当然，上述性能问题可以用多条tcp链接分块传输来实现。同上，依旧只是理论分析，要靠实际来检验。</p>
-<h3 id="断点下载"><a href="#断点下载" class="headerlink" title="断点下载"></a>断点下载</h3><p>  基本上将文件分块，通过多线程多条链接下载，同时需要在客户端保存下载完成的进度。</p>
-<p>  由于客户端可能断点或者其他的原因奔溃，而下载内容缓存在内存中会丢失，可以考虑数据库事务的实现方式，通过WAL来确认接收到的文件的某一块是否已经完整的写入硬盘。</p>
-<h3 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h3><p>  安全这一块真的不怎么懂。直接贴当时我的记录吧。<br>  服务端加盐存储md5值，防止彩虹表爆破。<br>  同时还要防止重放攻击，增加一个token值?<br>  由于没有使用TLS，所以传输层不安全。加密密码的使用对称加密效率高，但是交换密码不方便，非对称加密解密效率较低。<br>  抽空看看密码学吧。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://lse.sourceforge.net/io/aio.html" target="_blank" rel="external">Linux kernel AIO</a></p>
+        <p>  Memory Model可以简单的理解为内存的可见性，在多线程程序中是一个非常重要的概念，这次想系统的总结一下相关的基础知识，算是做个记录。    </p>
+<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>  在并发编程中，一般有两种编程模型，一种是通过shared memory，一种是通过交换message。两种模型中语言的代表前者比如c++，后者比如go。在共享内存的模型中就有cpu与内存读写的动作，一般的情况是某一个线程往内存中的某个位置写了一个值，另外一个线程在同一位置读到这个值，这样两个线程间就有了通信。那这里的问题在于我们并不能假设多线程的读写顺序会按照我们预想的那样完成。</p>
+<p>  编译器或者cpu在操作的时候往往为了性能的优化会交换我们程序中读写操作的顺序，这是在单核单线程时代就一直有的优化手段，在单线程程序中，编译器或cpu会保证这样的优化不会影响程序的正确性，比如说他们不会交换有依赖关系的读写操作。但是当随着技术的发展，摩尔定律由于功耗墙等一系列的原因失效后，各个cpu厂商开始堆砌多核的时代。当多线程的程序运行的时候，编译器或者cpu没法保证优化的正确性了，因为一个核并不能知道另外一个核上在跑着哪段代码。出于这样的现状，我们必须引入内存模型的概念，通过定义不同的内存模型，好让多线程程序运行的结果符合我们的预期。</p>
+<p>  不同的Memory Model会对编译器和cpu有着不同的优化限制，在较弱的模型中，编译器和cpu有着比较大的优化自由度，而在强一些的模型中，编译器和cpu就必须准守模型的约束，禁用某些优化的手段，甚至不能优化。</p>
+<h3 id="编译器乱序"><a href="#编译器乱序" class="headerlink" title="编译器乱序"></a>编译器乱序</h3><p>  Memory Model描述了cpu读取或写入内存的顺序，编译器可以在编译期交换我们程序读写的顺序，cpu在执行期也有可能乱序执行。所以在没有设定内存模型的语言中，比如c语言，下面的代码可能会出乎你的预料：</p>
+  <figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> num_a=<span class="number">0</span>, num_b=<span class="number">0</span>;</div><div class="line"></div><div class="line">num_a=num_b+<span class="number">1</span>;</div><div class="line">num_b=<span class="number">0</span>;</div></pre></td></tr></table></figure>
+<p>  上面的代码如果gcc开启O2的优化，查看汇编代码你就会发现num_a和num_b的操作顺序被交换的，这就是程序的乱序执行，虽然顺被被交换，但是程序在单线程下的语义的正确性并没有被改变，所以这样的优化是可行的。</p>
+<p>  如果我们想要禁用编译器的优化带来的乱序效果，我们可以使用GNU内联汇编 asm volatile(“” ::: “memory”) 来消去编译器乱序。不过这样的设置只会影响编译器，并不会转化成程序的汇编指令，所以对cpu的乱序执行是没有效果的。</p>
+<h3 id="CPU乱序"><a href="#CPU乱序" class="headerlink" title="CPU乱序"></a>CPU乱序</h3><p>  cpu由于硬件优化的原因也有可能乱序执行程序，不过不同的cpu有不同的内存模型，也就是对乱序的种类有不同的限制。比如我们常见的intel的X86 cpu就是强内存模型的，它只有可能执行storeload乱序，也就是读操作也许会和不同变量的写操作交换顺序，但是不会和同一个变量的写交换顺序，那样就会影响程序语义的正确性，X86 cpu会遵循程序的因果性。</p>
+<p>  另外像嵌入式产品中常用的Arm cpu就是弱内存模型，它允许更多种类的乱序。这里我插入一张参考链接中的图片来说明乱序的种类：<img src="/imag/barrier-types.png" alt=""></p>
+<p>  可以看到对于X86而言，一个核的写操作在其他核看起来顺序是一样的，不同核的写操作顺序是没有保证的。之所以X86只允许这一种乱序，是因为写操作比较费时间，所以在架构上会将写的值直接放进一个叫store buffer的地方，这样就会导致其他核可能不能马上看见这次写操作。</p>
+<p>  对于cpu的乱序我们也有办法加以改变，对于cpu乱序，我们可以用内存屏障指令防止某些或者全部种类的乱序执行。对于X86而言，lfence代表load barrier，rfence代表store barrier，mfence代表full barrier。</p>
+<p>  在程序中我们可以写到 asm volatile(“mfence” ::: “memory”)，这样即使禁止编译器乱序又是禁止cpu乱序。</p>
+<h3 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h3><p>  其实上面禁止乱序的指令我们在平时的程序中很难见到，主要是因为锁的语义中已经带有禁止乱序概念。</p>
+<h3 id="RCU"><a href="#RCU" class="headerlink" title="RCU"></a>RCU</h3><h3 id="hazard-pointer"><a href="#hazard-pointer" class="headerlink" title="hazard_pointer"></a>hazard_pointer</h3><h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/Memory_model_(programming" target="_blank" rel="external">Memory Model WIKI</a>)</p>
+<p><a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">What is RCU, Fundamentally?</a></p>
+<p><a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">Lock-Free Data Structures with Hazard Pointers</a></p>
 
       
     </div>
@@ -373,8 +363,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/06/23/线程池/" rel="next" title="实现一个简单的线程池">
-                <i class="fa fa-chevron-left"></i> 实现一个简单的线程池
+              <a href="/2017/03/02/MiniRpc4/" rel="next" title="MiniRpc 小结">
+                <i class="fa fa-chevron-left"></i> MiniRpc 小结
               </a>
             
           </div>
@@ -382,10 +372,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/09/03/从callback到coroutine/" rel="prev" title="从callback到coroutine">
-                从callback到coroutine <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -496,7 +482,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#文件读写方式"><span class="nav-number">1.</span> <span class="nav-text">文件读写方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#读写线程"><span class="nav-number">2.</span> <span class="nav-text">读写线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP还是TCP"><span class="nav-number">3.</span> <span class="nav-text">UDP还是TCP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#断点下载"><span class="nav-number">4.</span> <span class="nav-text">断点下载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安全"><span class="nav-number">5.</span> <span class="nav-text">安全</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编译器乱序"><span class="nav-number">2.</span> <span class="nav-text">编译器乱序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CPU乱序"><span class="nav-number">3.</span> <span class="nav-text">CPU乱序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#锁"><span class="nav-number">4.</span> <span class="nav-text">锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RCU"><span class="nav-number">5.</span> <span class="nav-text">RCU</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hazard-pointer"><span class="nav-number">6.</span> <span class="nav-text">hazard_pointer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">7.</span> <span class="nav-text">Reference</span></a></li></ol></div>
             
 
           </div>
