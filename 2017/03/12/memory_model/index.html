@@ -96,7 +96,7 @@
 <meta property="og:description" content="Memory Model可以简单的理解为内存的可见性，在多线程程序中是一个非常重要的概念，这次想系统的总结一下相关的基础知识，算是做个记录。    
 背景  在并发编程中，一般有两种编程模型，一种是通过shared memory，一种是通过交换message。两种模型中语言的代表前者比如c++，后者比如go。在共享内存的模型中就有cpu与内存读写的动作，一般的情况是某一个线程往内存中的某个位置">
 <meta property="og:image" content="http://yoursite.com/imag/barrier-types.png">
-<meta property="og:updated_time" content="2017-03-14T11:26:59.203Z">
+<meta property="og:updated_time" content="2017-03-14T11:29:37.122Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Memory Model">
 <meta name="twitter:description" content="Memory Model可以简单的理解为内存的可见性，在多线程程序中是一个非常重要的概念，这次想系统的总结一下相关的基础知识，算是做个记录。    
@@ -201,7 +201,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -211,7 +211,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -278,7 +278,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-12T10:36:21+08:00">
                 2017-03-12
@@ -331,8 +331,7 @@
 <p>  在程序中我们可以写到 asm volatile(“mfence” ::: “memory”)，这样即使禁止编译器乱序又是禁止cpu乱序。</p>
 <h3 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h3><p>  其实上面禁止乱序的指令我们在平时的程序中很难见到，主要是因为锁的语义中已经带有禁止乱序概念。</p>
 <h3 id="RCU"><a href="#RCU" class="headerlink" title="RCU"></a>RCU</h3><h3 id="hazard-pointer"><a href="#hazard-pointer" class="headerlink" title="hazard_pointer"></a>hazard_pointer</h3><h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/Memory_model_(programming" target="_blank" rel="external">Memory Model WIKI</a>)</p>
-<p><a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">What is RCU, Fundamentally?</a></p>
-<p><a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">Lock-Free Data Structures with Hazard Pointers</a></p>
+<p><a href="http://preshing.com/20120710/memory-barriers-are-like-source-control-operations/" target="_blank" rel="external">preshing on programming</a></p>
 
       
     </div>
@@ -420,10 +419,10 @@
       
         <ul class="sidebar-nav motion-element">
           <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            Inhaltsverzeichnis
+            Table of Contents
           </li>
           <li class="sidebar-nav-overview" data-target="site-overview">
-            Übersicht
+            Overview
           </li>
         </ul>
       
@@ -444,7 +443,7 @@
             <div class="site-state-item site-state-posts">
               <a href="/archives">
                 <span class="site-state-item-count">13</span>
-                <span class="site-state-item-name">Artikel</span>
+                <span class="site-state-item-name">posts</span>
               </a>
             </div>
           
@@ -514,7 +513,7 @@
 
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
