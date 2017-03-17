@@ -194,7 +194,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -204,7 +204,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -274,7 +274,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-17T10:36:21+08:00">
                 2017-03-17
@@ -389,7 +389,7 @@
               
                 
                 <a class="post-title-link" href="/2017/03/12/memory_model/" itemprop="url">
-                  Memory Model
+                  说说 Memory Model
                 </a>
               
             
@@ -403,7 +403,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-12T10:36:21+08:00">
                 2017-03-12
@@ -460,6 +460,7 @@
 <h3 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h3><p>  其实上面禁止乱序的指令我们在平时的程序中很难见到，主要是因为锁的语义中已经带有禁止乱序概念。</p>
 <p>  以spin_lock为例，锁要完成的任务有两点，1) 在同一时刻只让一个线程进入临界区 2) 防止临界区中的代码被乱序到临界区外去执行。这第二点就是所得acquire和release语义，acquire语义指的是acquire之后的所有内存读写操作不能被提前到acquire之前，realease语义指的是realease之前的所有内存读写操作不能被放到realease之后。这两个语义对编译器和cpu的乱序执行做出了限制。从而保证临界区中的代码在锁操作的范围内执行。</p>
 <p>  这两点中的第二点很容易被忽略，第一点我们都知道是通过CAS去实现，那第二点其实在加锁和释放锁的时候通过lock前缀指令和memory指令实现的。后面有时间的话，我想写一篇如何写一个性能不那么差的自旋锁的实现。</p>
+<p>  但是要注意的是，锁没有对临界区内的操作的顺序有任何限制，只能靠语言的内存模型来限制。这就是为什么在C++11之前不加内存屏障的DCLP是不行的原因，不过这一点在C++11中已经修复了。</p>
 <p>  另外，参考链接中的第二条对内存模型有一系列的文章描述，说的都很好，非常值的推荐阅读。</p>
 <h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://en.wikipedia.org/wiki/Memory_model_(programming" target="_blank" rel="external">Memory Model WIKI</a>)</p>
 <p><a href="http://preshing.com/20120710/memory-barriers-are-like-source-control-operations/" target="_blank" rel="external">Preshing on programming</a></p>
@@ -540,7 +541,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-02T10:36:21+08:00">
                 2017-03-02
@@ -661,7 +662,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-25T10:36:21+08:00">
                 2017-02-25
@@ -788,7 +789,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-10T10:36:21+08:00">
                 2017-02-10
@@ -921,7 +922,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-13T10:36:21+08:00">
                 2017-01-13
@@ -1074,7 +1075,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-25T10:36:21+08:00">
                 2016-12-25
@@ -1215,7 +1216,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-10T10:36:21+08:00">
                 2016-12-10
@@ -1353,7 +1354,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-11-05T10:36:21+08:00">
                 2016-11-05
@@ -1490,7 +1491,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Veröffentlicht am</span>
+                <span class="post-meta-item-text">Posted on</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-09-18T10:36:21+08:00">
                 2016-09-18
@@ -1651,7 +1652,7 @@
             <div class="site-state-item site-state-posts">
               <a href="/archives">
                 <span class="site-state-item-count">14</span>
-                <span class="site-state-item-name">Artikel</span>
+                <span class="site-state-item-name">posts</span>
               </a>
             </div>
           
@@ -1705,7 +1706,7 @@
 
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
