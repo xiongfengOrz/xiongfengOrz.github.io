@@ -87,22 +87,22 @@
 
 
 
-<meta name="description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+<meta name="description" content="面阿里一面的时候问了我innodb中mvcc的实现，当时并没有回答出全部的细节，只是说了innodb中没有真正的mvcc，是通过undo段来假装实现的，跟理论上的mvcc并不一样，有妥协。面完了突然想到这一点，就去翻了下mysql的Reference Manual，算是做个补遗吧。
 
-ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
+定义  老规矩，先解释下定义。MVCC (Multiversion Concurrency Control)，就">
 <meta property="og:type" content="article">
-<meta property="og:title" content="PyKV小记(未完待续)">
-<meta property="og:url" content="http://yoursite.com/2016/12/10/PyKV小记/index.html">
+<meta property="og:title" content="MySQL InnoDB实现MVCC">
+<meta property="og:url" content="http://yoursite.com/2017/03/17/mysql之mvcc/index.html">
 <meta property="og:site_name" content="A little thought">
-<meta property="og:description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+<meta property="og:description" content="面阿里一面的时候问了我innodb中mvcc的实现，当时并没有回答出全部的细节，只是说了innodb中没有真正的mvcc，是通过undo段来假装实现的，跟理论上的mvcc并不一样，有妥协。面完了突然想到这一点，就去翻了下mysql的Reference Manual，算是做个补遗吧。
 
-ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
-<meta property="og:updated_time" content="2017-03-11T08:12:16.626Z">
+定义  老规矩，先解释下定义。MVCC (Multiversion Concurrency Control)，就">
+<meta property="og:updated_time" content="2017-03-17T11:15:23.175Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PyKV小记(未完待续)">
-<meta name="twitter:description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+<meta name="twitter:title" content="MySQL InnoDB实现MVCC">
+<meta name="twitter:description" content="面阿里一面的时候问了我innodb中mvcc的实现，当时并没有回答出全部的细节，只是说了innodb中没有真正的mvcc，是通过undo段来假装实现的，跟理论上的mvcc并不一样，有妥协。面完了突然想到这一点，就去翻了下mysql的Reference Manual，算是做个补遗吧。
 
-ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
+定义  老规矩，先解释下定义。MVCC (Multiversion Concurrency Control)，就">
 
 
 
@@ -130,13 +130,13 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/12/10/PyKV小记/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/03/17/mysql之mvcc/"/>
 
 
 
 
 
-  <title> PyKV小记(未完待续) | A little thought </title>
+  <title> MySQL InnoDB实现MVCC | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -245,7 +245,7 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/10/PyKV小记/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/03/17/mysql之mvcc/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -266,7 +266,7 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
             
             
               
-                PyKV小记(未完待续)
+                MySQL InnoDB实现MVCC
               
             
           </h1>
@@ -281,8 +281,8 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-10T10:36:21+08:00">
-                2016-12-10
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-17T10:36:21+08:00">
+                2017-03-17
               </time>
             
 
@@ -318,26 +318,17 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
 
       
         <blockquote>
-<p>PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在<a href="https://github.com/xiongfengOrz/PyKV" target="_blank" rel="external">这里</a>。</p>
+<p>面阿里一面的时候问了我innodb中mvcc的实现，当时并没有回答出全部的细节，只是说了innodb中没有真正的mvcc，是通过undo段来假装实现的，跟理论上的mvcc并不一样，有妥协。面完了突然想到这一点，就去翻了下mysql的Reference Manual，算是做个补遗吧。</p>
 </blockquote>
-<h3 id="ZMQ"><a href="#ZMQ" class="headerlink" title="ZMQ"></a>ZMQ</h3><p>  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在传统socket上加了魔改效果有多种常用工作模式的套接字。</p>
-<p>  相对于原生的socket，zeroMq有以下几个特点：</p>
-<pre><code>- 使用简单。
-- 支持多种通信模式，比如在本项目中使用的请求响应模式，此外还有在分布式系统中常用的发布/订阅模式。
-- 高性能。zeroMq和其他消息队列的性能对比见[这里](http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html)。
-</code></pre><p>  想了解更多关于zeroMq的可以看它的官网，见<a href="http://zeromq.org/" target="_blank" rel="external">这里</a>。</p>
-<h3 id="使用实例"><a href="#使用实例" class="headerlink" title="使用实例"></a>使用实例</h3><p>  在客户端建立同server的链接，数据库名称db，建立三个空的query<br>   <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">client = client_factory(<span class="string">"db"</span>)</div><div class="line">quer1 = Query()</div><div class="line">quer2 = Query()</div><div class="line">quer3 = Query()</div></pre></td></tr></table></figure></p>
-<p> 查询<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.search(quer1.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
-<p>删除<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">client.remove(quer2.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
-<p>插入<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.insert([&#123;<span class="string">"name"</span>:<span class="string">"he"</span>&#125;])</div></pre></td></tr></table></figure></p>
-<p>更新<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.update(<span class="string">"delete"</span>, quer3.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
-<p>更多的使用实例后面会更新。</p>
-<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>其实实现反而没有什么好说的，跟一开始设想的仿照redis来实现的目标差的有点远。而且也是通过python的getattr自省和重载操作符来实现的条件的解析，算是取巧避开了实现类似于SQL的解析部分，这样大大减轻的程序的包袱。</p>
-<p>存储上一开始准备直接存在内存中，后面又在纠结是不是应该改成json好支持持久化，最后干脆两个都支持，将选择权留给配置，这样实现起来也很方便。</p>
-<p>没有做性能上的测试，主要还是不是很满意，后面应该会有大的改版，完成之后在做性能测试吧。</p>
-<p>既然还要修改的话，就把这篇的名字改成未完待续吧。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://zeromq.org/" target="_blank" rel="external">ZMQ官网</a></p>
-<p>[ZMQ性能测试](<a href="http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html" target="_blank" rel="external">http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html</a></p>
+<h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>  老规矩，先解释下定义。MVCC (Multiversion Concurrency Control)，就是多版本并发控制的缩写。在数据库中出现的原因是实现事务不同隔离级别的传统的加锁方式性能消耗实在太大，而现实中的很多应用都是读多写少，传统的悲观锁的方式不能满足需求，才引出了今天广泛应用的mvcc。</p>
+<p>  其基本原理是将数据同版本结合起来，在读的时候可以选择特定的版本，当读写不同版本时可以不用阻塞读。MVCC是一种后验性的，读不阻塞写，写也不阻塞读，等到提交的时候才检验是否有冲突，由于没有锁，所以读写不会相互阻塞，从而大大提升了并发性能。其实我们通常使用的版本管理系统git就是mvcc的，每个人都可以在本地修改，只有在提交时才检测冲突，是一种最终一致性系统。</p>
+<p>  理论上mvcc实现的是有条件的更新，只有在版本匹配的情况下才能更新数据，避免了长时间的锁定，是一种乐观锁。</p>
+<h3 id="InnoDB的实现"><a href="#InnoDB的实现" class="headerlink" title="InnoDB的实现"></a>InnoDB的实现</h3><p>  innodb的默认事务隔离级别是RR也就是Repeatable-Read。这个隔离级别下重复的读不会见到不同的数据，其实现就是通过给数据行加上不同的版本，实现一致性读。</p>
+<p>  innodb的数据行具体的格式这里就不列出了，只指出跟今天要解释的相关的两个，一个是6个字节的DB_TRX_ID，另外一个是7个字节的DB_ROLL_PTR。DB_TRX_ID 用来表示不同的事务号，通过这个来实现事务不同的版本。DB_ROLL_PTR就是innodb实现mvcc的主要方式，可以把它理解为一个指针，这个指针指向undo段中的上一个版本的数据。</p>
+<p>  具体实现多版本的时候就是通过这个版本号和指针来实现的。select操作的时候会使用当前版本号，然后对于每行数据会检查数据的版本号，只有数据的版本号小于select的版本号同时数据还没有被删除的情况下才会读出这行数据。update的时候会新增一行数据，在这行数据上修改，同时将DB_ROLL_PTR指向之前那行的数据，事务回滚的时候就可以通过这行数据来恢复操作前的状态。</p>
+<p>  所以，通过上面的分析我们发现，innodb并没有实现真正理论上的mvcc，它只是通过DB_ROLL_PTR指向undo段中的数据，没有实现核心的多版本共存，undo段中的数据类似于一个单链表是串行化实现的。之所以做这种实现上的妥协，是因为理想的mvcc对于一次修改多行数据的事物回滚可能会造成丢失更新。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>  本篇只是简单的介绍了下innodb对mvcc的实现，发现它跟理论上的mvcc还是有不同的地方，只是利用了undo log中的信息而且写操作还是使用的悲观锁。具体的细节参考的是mysql的reference manual，顺便说一句，这里面对mysql介绍的很详细，可惜好多都没有读过 (逃</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://dev.mysql.com/doc/refman/5.7/en/innodb-multi-versioning.html" target="_blank" rel="external">InnoDB Multi-Versioning</a></p>
 
       
     </div>
@@ -368,8 +359,8 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/11/05/无锁编程之替换读写锁/" rel="next" title="用无锁编程来替换读写锁">
-                <i class="fa fa-chevron-left"></i> 用无锁编程来替换读写锁
+              <a href="/2017/03/12/memory_model/" rel="next" title="Memory Model">
+                <i class="fa fa-chevron-left"></i> Memory Model
               </a>
             
           </div>
@@ -377,10 +368,6 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/12/25/比特币和区块链/" rel="prev" title="比特币和区块链">
-                比特币和区块链 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -491,7 +478,7 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ZMQ"><span class="nav-number">1.</span> <span class="nav-text">ZMQ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用实例"><span class="nav-number">2.</span> <span class="nav-text">使用实例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#定义"><span class="nav-number">1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InnoDB的实现"><span class="nav-number">2.</span> <span class="nav-text">InnoDB的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
             
 
           </div>
