@@ -87,22 +87,25 @@
 
 
 
-<meta name="description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+<meta name="description" content="这段时间一直被老师压着在实验室干活，有段时间没有写博客了，抽个空记录下去年写的一个简单的协程的实现。
 
-ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
+协程  老规矩，先上wiki定义。在我理解上，协程本质上就是用户态线程，出现的目的是用来缓解系统线程过多时带来的系统调用和切换开销，另外一种横向对比的技术就是callback，这两者之间的对比都在我之前的一篇博客中有过介绍。
+  现在有很多语言都内置了对协程的支持，比如go还有python。当">
 <meta property="og:type" content="article">
-<meta property="og:title" content="PyKV小记(未完待续)">
-<meta property="og:url" content="http://yoursite.com/2016/12/10/PyKV小记/index.html">
+<meta property="og:title" content="实现Coroutine">
+<meta property="og:url" content="http://yoursite.com/2017/05/05/实现coroutine/index.html">
 <meta property="og:site_name" content="A little thought">
-<meta property="og:description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+<meta property="og:description" content="这段时间一直被老师压着在实验室干活，有段时间没有写博客了，抽个空记录下去年写的一个简单的协程的实现。
 
-ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
-<meta property="og:updated_time" content="2017-03-11T08:12:16.626Z">
+协程  老规矩，先上wiki定义。在我理解上，协程本质上就是用户态线程，出现的目的是用来缓解系统线程过多时带来的系统调用和切换开销，另外一种横向对比的技术就是callback，这两者之间的对比都在我之前的一篇博客中有过介绍。
+  现在有很多语言都内置了对协程的支持，比如go还有python。当">
+<meta property="og:updated_time" content="2017-05-13T07:31:35.192Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PyKV小记(未完待续)">
-<meta name="twitter:description" content="PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在这里。
+<meta name="twitter:title" content="实现Coroutine">
+<meta name="twitter:description" content="这段时间一直被老师压着在实验室干活，有段时间没有写博客了，抽个空记录下去年写的一个简单的协程的实现。
 
-ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在">
+协程  老规矩，先上wiki定义。在我理解上，协程本质上就是用户态线程，出现的目的是用来缓解系统线程过多时带来的系统调用和切换开销，另外一种横向对比的技术就是callback，这两者之间的对比都在我之前的一篇博客中有过介绍。
+  现在有很多语言都内置了对协程的支持，比如go还有python。当">
 
 
 
@@ -130,13 +133,13 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2016/12/10/PyKV小记/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/05/05/实现coroutine/"/>
 
 
 
 
 
-  <title> PyKV小记(未完待续) | A little thought </title>
+  <title> 实现Coroutine | A little thought </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -245,7 +248,7 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/10/PyKV小记/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/05/实现coroutine/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="xiong feng">
@@ -266,7 +269,7 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
             
             
               
-                PyKV小记(未完待续)
+                实现Coroutine
               
             
           </h1>
@@ -281,8 +284,8 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-10T10:36:21+08:00">
-                2016-12-10
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-05-05T10:36:21+08:00">
+                2017-05-05
               </time>
             
 
@@ -318,26 +321,23 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
 
       
         <blockquote>
-<p>PyKV是用python仿照着redis实现的一个简单的key-value形的数据库，使用zeroMq完成client端和server端的通信，通过python的自省来完成对操作条件的解析，从而支持简单的增删查改。项目地址在<a href="https://github.com/xiongfengOrz/PyKV" target="_blank" rel="external">这里</a>。</p>
+<p>这段时间一直被老师压着在实验室干活，有段时间没有写博客了，抽个空记录下去年写的一个简单的协程的实现。</p>
 </blockquote>
-<h3 id="ZMQ"><a href="#ZMQ" class="headerlink" title="ZMQ"></a>ZMQ</h3><p>  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似于消息队列的功能，却并不是一个消息队列,工作在socket之上，传统的消息队列之下·。它提供了在传统socket上加了魔改效果有多种常用工作模式的套接字。</p>
-<p>  相对于原生的socket，zeroMq有以下几个特点：</p>
-<pre><code>- 使用简单。
-- 支持多种通信模式，比如在本项目中使用的请求响应模式，此外还有在分布式系统中常用的发布/订阅模式。
-- 高性能。zeroMq和其他消息队列的性能对比见[这里](http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html)。
-</code></pre><p>  想了解更多关于zeroMq的可以看它的官网，见<a href="http://zeromq.org/" target="_blank" rel="external">这里</a>。</p>
-<h3 id="使用实例"><a href="#使用实例" class="headerlink" title="使用实例"></a>使用实例</h3><p>  在客户端建立同server的链接，数据库名称db，建立三个空的query<br>   <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">client = client_factory(<span class="string">"db"</span>)</div><div class="line">quer1 = Query()</div><div class="line">quer2 = Query()</div><div class="line">quer3 = Query()</div></pre></td></tr></table></figure></p>
-<p> 查询<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.search(quer1.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
-<p>删除<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">client.remove(quer2.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
-<p>插入<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.insert([&#123;<span class="string">"name"</span>:<span class="string">"he"</span>&#125;])</div></pre></td></tr></table></figure></p>
-<p>更新<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">client.update(<span class="string">"delete"</span>, quer3.name == <span class="string">"he"</span>)</div></pre></td></tr></table></figure></p>
-<p>更多的使用实例后面会更新。</p>
-<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>其实实现反而没有什么好说的，跟一开始设想的仿照redis来实现的目标差的有点远。而且也是通过python的getattr自省和重载操作符来实现的条件的解析，算是取巧避开了实现类似于SQL的解析部分，这样大大减轻的程序的包袱。</p>
-<p>存储上一开始准备直接存在内存中，后面又在纠结是不是应该改成json好支持持久化，最后干脆两个都支持，将选择权留给配置，这样实现起来也很方便。</p>
-<p>没有做性能上的测试，主要还是不是很满意，后面应该会有大的改版，完成之后在做性能测试吧。</p>
-<p>既然还要修改的话，就把这篇的名字改成未完待续吧。</p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://zeromq.org/" target="_blank" rel="external">ZMQ官网</a></p>
-<p>[ZMQ性能测试](<a href="http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html" target="_blank" rel="external">http://mikehadlow.blogspot.com/2011/04/message-queue-shootout.html</a></p>
+<h3 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h3><p>  老规矩，先上<a href="https://zh.wikipedia.org/wiki/%E5%8D%8F%E7%A8%8B" target="_blank" rel="external">wiki定义</a>。在我理解上，协程本质上就是用户态线程，出现的目的是用来缓解系统线程过多时带来的系统调用和切换开销，另外一种横向对比的技术就是callback，这两者之间的对比都在我之前的一篇博客中有过介绍。</p>
+<p>  现在有很多语言都内置了对协程的支持，比如go还有python。当然goroutine和我们常理解的coroutine还是有些不同的，这些不同就留给以后我再抽空来写一篇介绍吧，今天主要是介绍如何用c在linux下实现一个简洁的协程库。</p>
+<h3 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h3><p>  既然已经有这么多语言支持协程了，那其实我在一开始考虑实现的时候就有想过实现的参考对象。从复杂度上来讲，我没有考虑支持类似于goroutine那样的M:N的调度器，反倒是python早期用generator来实现coroutine的模型比较合适。但是c语言是跑在系统的栈上的，不是像python那样在堆上有PyFrameObject对象，所以我还需要自己处理协程栈。</p>
+<p>  既然选定了参考对象，那么就可以列出要实现的协程库的几点特性。</p>
+<p>  1 支持yield和resume来实现手工切换</p>
+<p>  2 在yield和resume中支持协程间变量的传递</p>
+<p>  3 合适的处理协程切换时栈的切换</p>
+<h3 id="协程切换的实现"><a href="#协程切换的实现" class="headerlink" title="协程切换的实现"></a>协程切换的实现</h3><p>  c语言并不支持函数的挂起和恢复，那么在切换协程的时候我们就必须要手工保存上下文，便于在恢复的时候使用。那所谓的上下文其实就是函数使用的寄存器和栈上的所有变量。既然要操作系统的栈，c语言就不合适了，只能使用汇编，当然linux本身也提供了ucontex来实现上下文切换。</p>
+<p>  在实现的时候我使用了linux的ucontext，总共有四个函数，最常用的就是makecontext和swapcontext，函数顾名思义，makecontext是用来修改上下文，把上下文的入口改成某个函数，并且可以传递参数给这个函数。swapcontext实现上下文切换。我简单看了看这两个函数的实现，有点类似于linux kernel中进程切换的实现，但是这比kernel中的schedule函数的是实现简单多了。</p>
+<h3 id="协程间变量的传递"><a href="#协程间变量的传递" class="headerlink" title="协程间变量的传递"></a>协程间变量的传递</h3><p>  类似于python的generator，yield可以将某个变量传回给主程序。这里不同的协程只是用户空间看起来而已，对于系统，都是同一个系统线程，他们共享地址空间，所以对于不同协程间变量的共享和传递，我们可以简单的在将一个协程要传递的变量放在堆中的某个位置上，然后将这个位置告诉给要切换过去的协程即可。位置的话就用某个类成员变量即可。</p>
+<h3 id="栈的处理"><a href="#栈的处理" class="headerlink" title="栈的处理"></a>栈的处理</h3><p>  其实协程栈的处理相对而言方式有很多种。在这里我是用的是copy stack，就是为每个协程在堆中中保存它的栈，在协程切换的时候将系统当前的栈拷贝到当前运行的协程中，然后将要切换过去的栈拷贝到系统栈上。</p>
+<p>  这样做的优点是简单，缺点是切换中拷贝带来的开销在某些应用中不能容忍。好在我实现的协程库要求每个协程有最大的栈大小，一般而言开销并不会太大。其他的实现方式还有segmented stack，按需分配，开销相对要小一些，但是实现起来也比较复杂，这种方式gcc是支持的。</p>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>  我还实现了一个简单的调度器，用来处理不同协程的调度。但是仅仅只是考虑本系统线程内的协程，没有做多线程上的调度。golang就有多个系统线程，用来处理所有goroutine的调度，还可以使用工作窃取算法来平衡不同系统线程的负载。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html" target="_blank" rel="external">Coroutine</a></p>
+<p><a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">What is RCU, Fundamentally?</a></p>
 
       
     </div>
@@ -368,8 +368,8 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/11/05/无锁编程之替换读写锁/" rel="next" title="用无锁编程来替换读写锁">
-                <i class="fa fa-chevron-left"></i> 用无锁编程来替换读写锁
+              <a href="/2017/03/17/mysql之mvcc/" rel="next" title="MySQL InnoDB实现MVCC">
+                <i class="fa fa-chevron-left"></i> MySQL InnoDB实现MVCC
               </a>
             
           </div>
@@ -377,10 +377,6 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/12/25/比特币和区块链/" rel="prev" title="比特币和区块链">
-                比特币和区块链 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -491,7 +487,7 @@ ZMQ  zeroMq是一个为可伸缩的高性能异步消息库。它提供了类似
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ZMQ"><span class="nav-number">1.</span> <span class="nav-text">ZMQ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用实例"><span class="nav-number">2.</span> <span class="nav-text">使用实例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现"><span class="nav-number">3.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#协程"><span class="nav-number">1.</span> <span class="nav-text">协程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#特性"><span class="nav-number">2.</span> <span class="nav-text">特性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#协程切换的实现"><span class="nav-number">3.</span> <span class="nav-text">协程切换的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#协程间变量的传递"><span class="nav-number">4.</span> <span class="nav-text">协程间变量的传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#栈的处理"><span class="nav-number">5.</span> <span class="nav-text">栈的处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">6.</span> <span class="nav-text">其他</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">7.</span> <span class="nav-text">Reference</span></a></li></ol></div>
             
 
           </div>
