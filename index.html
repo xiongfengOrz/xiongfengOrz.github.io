@@ -194,7 +194,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -204,7 +204,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -274,7 +274,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-05-05T10:36:21+08:00">
                 2017-05-05
@@ -324,14 +324,14 @@
 <p>  1 支持yield和resume来实现手工切换</p>
 <p>  2 在yield和resume中支持协程间变量的传递</p>
 <p>  3 合适的处理协程切换时栈的切换</p>
-<h3 id="协程切换的实现"><a href="#协程切换的实现" class="headerlink" title="协程切换的实现"></a>协程切换的实现</h3><p>  c语言并不支持函数的挂起和恢复，那么在切换协程的时候我们就必须要手工保存上下文，便于在恢复的时候使用。那所谓的上下文其实就是函数使用的寄存器和栈上的所有变量。既然要操作系统的栈，c语言就不合适了，只能使用汇编，当然linux本身也提供了ucontex来实现上下文切换。</p>
+<h3 id="协程切换的实现"><a href="#协程切换的实现" class="headerlink" title="协程切换的实现"></a>协程切换的实现</h3><p>  c语言并不支持函数的挂起和恢复，那么在切换协程的时候我们就必须要手工保存上下文，便于在恢复的时候使用。那所谓的上下文其实就是函数使用的寄存器和栈上的所有变量。既然要操作系统的栈，c语言就不合适了，只能使用汇编，当然linux本身也提供了ucontex来实现上下文切换，当然还有setjmp和longjmp也可以做到这一点。</p>
 <p>  在实现的时候我使用了linux的ucontext，总共有四个函数，最常用的就是makecontext和swapcontext，函数顾名思义，makecontext是用来修改上下文，把上下文的入口改成某个函数，并且可以传递参数给这个函数。swapcontext实现上下文切换。我简单看了看这两个函数的实现，有点类似于linux kernel中进程切换的实现，但是这比kernel中的schedule函数的是实现简单多了。</p>
 <h3 id="协程间变量的传递"><a href="#协程间变量的传递" class="headerlink" title="协程间变量的传递"></a>协程间变量的传递</h3><p>  类似于python的generator，yield可以将某个变量传回给主程序。这里不同的协程只是用户空间看起来而已，对于系统，都是同一个系统线程，他们共享地址空间，所以对于不同协程间变量的共享和传递，我们可以简单的在将一个协程要传递的变量放在堆中的某个位置上，然后将这个位置告诉给要切换过去的协程即可。位置的话就用某个类成员变量即可。</p>
 <h3 id="栈的处理"><a href="#栈的处理" class="headerlink" title="栈的处理"></a>栈的处理</h3><p>  其实协程栈的处理相对而言方式有很多种。在这里我是用的是copy stack，就是为每个协程在堆中中保存它的栈，在协程切换的时候将系统当前的栈拷贝到当前运行的协程中，然后将要切换过去的栈拷贝到系统栈上。</p>
 <p>  这样做的优点是简单，缺点是切换中拷贝带来的开销在某些应用中不能容忍。好在我实现的协程库要求每个协程有最大的栈大小，一般而言开销并不会太大。其他的实现方式还有segmented stack，按需分配，开销相对要小一些，但是实现起来也比较复杂，这种方式gcc是支持的。</p>
-<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>  我还实现了一个简单的调度器，用来处理不同协程的调度。但是仅仅只是考虑本系统线程内的协程，没有做多线程上的调度。golang就有多个系统线程，用来处理所有goroutine的调度，还可以使用工作窃取算法来平衡不同系统线程的负载。</p>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>  我还实现了一个简单的调度器，用来处理不同协程的调度。但是仅仅只是考虑本系统线程内的协程，没有做多线程上的调度。golang的调度器就有多个系统线程，用来处理所有goroutine的调度，还可以使用工作窃取算法来平衡不同系统线程的负载。</p>
+<p>  另外，对于网络编程而言，可以考虑hook系统调用，将fd设置为非阻塞状态，在read或者write可能阻塞的时候将对应的fd挂载到epoll上面去，然后返回调度器，根据epoll的返回的可读或可写fd来选取下一个协程来运行。</p>
 <h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html" target="_blank" rel="external">Coroutine</a></p>
-<p><a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">What is RCU, Fundamentally?</a></p>
 
           
         
@@ -409,7 +409,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-17T10:36:21+08:00">
                 2017-03-17
@@ -538,7 +538,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-12T10:36:21+08:00">
                 2017-03-12
@@ -676,7 +676,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-02T10:36:21+08:00">
                 2017-03-02
@@ -797,7 +797,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-25T10:36:21+08:00">
                 2017-02-25
@@ -924,7 +924,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-10T10:36:21+08:00">
                 2017-02-10
@@ -1057,7 +1057,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-13T10:36:21+08:00">
                 2017-01-13
@@ -1210,7 +1210,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-25T10:36:21+08:00">
                 2016-12-25
@@ -1351,7 +1351,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-10T10:36:21+08:00">
                 2016-12-10
@@ -1489,7 +1489,7 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
               <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-11-05T10:36:21+08:00">
                 2016-11-05
@@ -1630,7 +1630,7 @@
             <div class="site-state-item site-state-posts">
               <a href="/archives">
                 <span class="site-state-item-count">15</span>
-                <span class="site-state-item-name">posts</span>
+                <span class="site-state-item-name">Artikel</span>
               </a>
             </div>
           
@@ -1684,7 +1684,7 @@
 
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
