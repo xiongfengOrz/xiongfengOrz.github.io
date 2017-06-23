@@ -237,6 +237,139 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/12/BBR/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="xiong feng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="A little thought">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/06/12/BBR/" itemprop="url">
+                  迟到的Google BBR分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Veröffentlicht am</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-12T10:36:21+08:00">
+                2017-06-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>还是在去年年底的时候得知了kernel 4.9中添加了google推出的的一种新的tcp拥塞控制算法-BBR。当时就在自己的VPS上装上4.9的kernel，打开了BBR，测试了一下发现很好用，youtube一点都不卡。</p>
+<p>不过遗憾的是当时并没有去了解这个算法的原理，后来就一直拖着了。这个周末终于不用在实验室加班，有了空闲时间就想找点事做，刚好想起了这个算法，搜索了一下发现中文资料并不多，就索性找到算法的原版论文，来尝试做一次分析。</p>
+<p>BBR和现在linux 内核默认的的Cubic以及经典的Reno算法最大的不同在于对网络拥塞模型的理解。Reno以及Cubic都认为出现丢包就发生了网络拥塞，这种假设的前提是网络本身的丢包率非常低，因为这些算法不会区分这两种不同的原因导致的丢包。但是我们知道在现实中很多网络是会存在一定的丢包率的，最典型的的例子就是翻墙上国外的网站的时候。那么当网络丢包率比较高时，原先的这些算法表现如何呢？文尾给出的原始论文中有一张图，指出当网络丢包率达到百分之一时原始的算法几乎就卡住带宽接近于零了（Reno一丢包就慢启动的方式在不稳定的网络链路中根本没法有效的发包）。另外，Cubic和Reno根据丢包判断网络是否拥塞的这种方式还会导致另外一个明显的问题-Bufferbloat（缓冲区膨胀）。Bufferbloat指的是由于网络路径上的路由器都有缓存，Reno在慢启动过程中不仅会将数据包填满网络带宽，同时也会填满路径上所有路由器的缓存，直到缓存填满才会开始丢包减少发包。填满了路由器的缓存会导致后续的数据包排队过长，导致RTT突然增大增加的数据包的延时。这还会导致一个隐含的问题，为了避免丢包产生拥塞，路由器制造商会增大其缓存容量，更大的路由器缓存会导致更加严重的Bufferbloat问题，这样就在一个恶性循环中导致延时越来越大。</p>
+<p>在这样的环境中，BBR出现了。BBR采用了跟原来的拥塞控制算法完全不同的模型，它不再根据丢包来判断是否发生拥塞，它直接测量网络的RTT和带宽。这里就要解释下拥塞控制所要达到的最优化目标了，对于一个网络链路，在优的条件下在网络上传输的数据包应该等于时延带宽积，也就是这些数据包完全填满了网络链路而没有填满链路上路由器的缓存。为了计算这个网络的时延带宽积，BBR分别测量的网络的最小时延和最大带宽来得到拥塞控制的最优化目标。</p>
+<p>仔细想想，BBR所追求的才应该是拥塞控制的本质，而从Reno开始的一系列算法都是采取填满链路直到丢包的思路，而BBR的实现更加合理一些。</p>
+<h2 id="实现介绍"><a href="#实现介绍" class="headerlink" title="实现介绍"></a>实现介绍</h2><p>下面就类似Reno的方式简单说说BBR几个阶段和步骤。</p>
+<p>首先类似于Reno，BBR也有慢启动过程，但是所不同的是，在慢启动过程初期BBR会测量RTT的值作为RTT的初始值，Reno慢启动过程一直到丢包才结束，而像上面说的BBR不会等到丢包，而是在不停的策略带宽，当带宽不再增长的时候就结束慢启动，将这时测量到的带宽当做带宽的初始值。</p>
+<p>因为上一阶段测量慢启动结束点时BBR向网络中多占用了网络，那么就需要在这一阶段将多发出去的网络上的数据包排空，这时BBR进入drain（排空）阶段。指数降低发包的速率，随着网络中的数据包不断被接收排空，时延会不断下降，当时延不再降低时排空阶段结束，进入下一阶段。</p>
+<p>排空阶段结束后，BBR进入稳定状态，在稳定转态下BBR交替测量网络的时延和带宽。下面讲讲具体测量的方式：</p>
+<p>对于带宽，BBR以8个RTT为一个周期，在第一个RTT中将发包的速率增加25%，在第二个RTT中降低25%，后面六个RTT使用前面测量到的带宽发送数据。</p>
+<p>对于时延，BBR以10秒钟作为一个周期，以这10秒钟的RTT的最小值作为新的RTT，如果在这10秒钟没有出现比当前RTT更小的值，那么网络的时延可能已经增大了，这时就进入时延探测阶段，在这个阶段中，BBR只发送4个数据包，用最小的RTT作为新的RTT值。</p>
+<h3 id="需要注意的一个点"><a href="#需要注意的一个点" class="headerlink" title="需要注意的一个点"></a>需要注意的一个点</h3><p>对上面BBR的算法做点解释：<br>对于时延和带宽必须交替测量，不能同时测量，因为为了测量最小的RTT值，网络必须没有满，这时的带宽必然不是最大的。而为了测量最大的带宽，网络以满，RTT已经增大。所以这两个量就像是粒子的位置和动量一样没有办法同时测量的。</p>
+<p>另外BBR用10秒钟作为一个周期，来测量RTT的值，所以对于短暂的RTT抖动并不敏感，这也是BBR算法和vegas算法不一样的地方。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>根据上面的分析，BBR其实比较适合的还是有一定丢包率的网络链路，在这种链路上BBR能够获得更好的带宽和更低的时延。但是尽管有如此多的有点，我们也要清楚BBR并不是万能的，在网络队列比较深的时候，如果Reno算法在BBR规定的10秒内还没有填满路由器的缓存也就是没有发生丢包的时候，BBR是弱于现在使用Reno和Cubic算法的。每种算法都有它合适的场景。</p>
+<p>更多的分析可以看看参考链接中给出的论文，很好读也很好懂。</p>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="http://queue.acm.org/detail.cfm?id=3022184" target="_blank" rel="external">BBR paper</a><br><a href="http://netdevconf.org/1.2/slides/oct5/04_Making_Linux_TCP_Fast_netdev_1.2_final.pdf" target="_blank" rel="external">BBR ppt</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/05/实现coroutine/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -276,7 +409,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-05-05T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-05T10:36:21+08:00">
                 2017-05-05
               </time>
             
@@ -411,7 +544,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-17T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-17T10:36:21+08:00">
                 2017-03-17
               </time>
             
@@ -540,7 +673,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-12T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-12T10:36:21+08:00">
                 2017-03-12
               </time>
             
@@ -678,7 +811,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-02T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-03-02T10:36:21+08:00">
                 2017-03-02
               </time>
             
@@ -799,7 +932,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-25T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-02-25T10:36:21+08:00">
                 2017-02-25
               </time>
             
@@ -926,7 +1059,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-02-10T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-02-10T10:36:21+08:00">
                 2017-02-10
               </time>
             
@@ -1059,7 +1192,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-01-13T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-01-13T10:36:21+08:00">
                 2017-01-13
               </time>
             
@@ -1212,7 +1345,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-25T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-12-25T10:36:21+08:00">
                 2016-12-25
               </time>
             
@@ -1353,7 +1486,7 @@
               
                 <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-12-10T10:36:21+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-12-10T10:36:21+08:00">
                 2016-12-10
               </time>
             
@@ -1443,143 +1576,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/11/05/无锁编程之替换读写锁/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="xiong feng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="A little thought">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/05/无锁编程之替换读写锁/" itemprop="url">
-                  用无锁编程来替换读写锁
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Veröffentlicht am</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-11-05T10:36:21+08:00">
-                2016-11-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>这篇文章根据16年学习hazard_pointer写的笔记扩展而来的。</p>
-</blockquote>
-<p>  最近读了这篇<a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">介绍hazard_pointer的文章</a>，回想起了进实验室做的第一个关于分布式路由的项目，其中我用了<a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">RCU</a>替换了路由表的读写锁。这两者都是适用于读多写少的场景，一样都适合在某些情况下替换掉读写锁。故写下这篇记录，对比下RCU和hazard_pointer这两种无锁编程技术。</p>
-<h3 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h3><p>  先说说读写锁，在服务器多线程应用中，并发的读写一个全局变量是非常常见的场景。一般这个时候我们都会加上互斥锁或者读写锁，防止data-race。这里要注意的是，并不能简单的说读写锁就一定优于互斥锁，不信？ 看<a href="https://blogs.oracle.com/roch/entry/beware_of_the_performance_of" target="_blank" rel="external">这里</a>。但是文章中的判断只具有指导意义，实际情况中最好做BenchMark视情况而定。</p>
-<p>  但是有的时候，读写锁在高并发的情况下存在一些局限，一方面对锁的争用会带来性能上的问题，另一方面，读者或者写者也有被饿死的危险。尤其是第二个问题，让我们自然而然的想到了用无锁编程的技巧来替换掉读写锁。</p>
-<h3 id="RCU"><a href="#RCU" class="headerlink" title="RCU"></a>RCU</h3><p>  RCU全称Read-Copy Update，是早在linux 2.6的内核中就引进的一种新的高性能的机制。</p>
-<p>  RCU的名字很容易让人联想到COW(Copy On Write)，其实现上也确实和cow有点类似。对于被RCU保护的共享数据结构，读者不需要获得任何锁就可以访问它，但写者在访问它时首先拷贝一个副本，然后对副本进行修改，最后使用一个回调（callback）机制在适当的时机把指向原来数据的指针重新指向新的被修改的数据。</p>
-<p>  这里有一个内核实现上的小trick，就是如何判断没有读者在将要被释放的数据上。内核限制了RCU的使用，在读者使用RCU保护的数据期间，不能发生阻塞，如果没有阻塞，那么就没有切换。内核判断如果所有CPU上都经历了一次切换，就没有读者引用旧的数据，就可以安全修改指针指向新的数据。</p>
-<p>  在使用了RCU后，读者几乎没有什么同步开销，没有锁，没有原子变量，在X86下甚至不用考虑memory order，不会被饿死。由于读者几乎没有开销，那对于写者，就需要承担更多的开销，它需要复制被修改的数据结构，同时要确定没有读者在引用被修改的原内容后，释放掉原来的数据，但是RCU并不拒绝多个写者的同时写入，这是读写锁所做不到的，当然多个写者之间还是要考虑适当的同步。</p>
-<p>  使用了RCU带来了相对于读写锁如此多的好处，那是不是所有出现读写锁的地方都可以使用RCU呢？当然不是的，如果RCU没有其他side effect那就真没有读写锁什么事了，可现实是RCU要求读者在持有读数据期间不能阻塞，同时，由于写者较大的开销，在写者很多的情况下，读的高性能不能弥补写的开销带来的损失。</p>
-<p>  而且，RCU允许读者继续在旧的数据上操作直到离开，那并不是所有应用都能允许这一点，但是在某些应用中是可以的，比如路由表的更新，暂时读到旧的路由是没有关系的，如果发现路由失效读者就会再次读取路由表，这时就会读到新的路由了。这也就是为什么我可以在实验室的项目中用RCU替换掉路由表的读写锁的原因。</p>
-<h3 id="hazard-pointer"><a href="#hazard-pointer" class="headerlink" title="hazard_pointer"></a>hazard_pointer</h3><p>  明白了RCU的基本操作原理，hazard_pointer也就没那么难懂了。hazard_pointer包裹了原始的pointer，读者要访问共享变量前要先保存到读线程局部变量(thread_local)，然后再访问，访问完成后从线程局部移除。而要释放一个共享对象时，则要先遍历所有读线程保存了hazard_pointer的局部变量,只要有一个读线程thread_local保存有这个共享对象的hazard_pointer，说明这个线程有可能将要访问这个对象，因此不能释放，只有所有读线程的thread_local信息中都没有保存这个共享对象的hazard_pointer情况下，才能将其释放。</p>
-<p>  其实现上也有一个小trick，读的操作中有一个double check的过程，就是在拿到全局变量加入thread_local后需要再判断一次全局变量是否还在。如果想知道为什么这么做可以去看看Reference里的原始文章，在这里我就不复述了。</p>
-<p>  hazard_pointer的问题是每次都要遍历所有读线程的thread local，这个耗时在读线程较多的时候会相当可观。为了减少耗时，可以采取同pipeline相同的思想，只有在需要写的变量操作一定的数量后才开始遍历的操作，这样可以减少写的耗时。</p>
-<p>  另外有了hazard_pointer后，我们顺便其实还解决了无锁编程中的ABA问题，这在不方便使用传统方法解决(比如加上版本号)的情况下不失为另外一种好的办法。</p>
-<p>  RCU不光只是在内核态有，在用户态也有。如果一定要对比下这两种无锁编程的技术，那就是hazard_pointer比较难用，还需要考虑很多的问题。比如究竟需要多少hazard_pointer，在很多时候，我们并不一定需要hazard_pointer，比如如果我们从不解引用指针等等一些情况。遗憾的是我也没有在实际工程中使用过hazard_pointer，以后如果有机会使用过了，我会再回来补上使用的体验。 </p>
-<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p><a href="https://blogs.oracle.com/roch/entry/beware_of_the_performance_of" target="_blank" rel="external">Beware of the Performance of RW Locks</a></p>
-<p><a href="https://lwn.net/Articles/262464/" target="_blank" rel="external">What is RCU, Fundamentally?</a></p>
-<p><a href="http://www.drdobbs.com/lock-free-data-structures-with-hazard-po/184401890" target="_blank" rel="external">Lock-Free Data Structures with Hazard Pointers</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1629,7 +1625,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-count">16</span>
                 <span class="site-state-item-name">Artikel</span>
               </a>
             </div>
